@@ -39,7 +39,7 @@ export class DataFetcher {
       const response = await globalThis.fetch(url, { signal: controller.signal });
 
       if (!response.ok) {
-        return this.previousResult;
+        return { ...this.previousResult, failed: true };
       }
 
       const text = await response.text();
@@ -50,7 +50,7 @@ export class DataFetcher {
       return result;
     } catch {
       // Network error, timeout (AbortError), or any other failure
-      return this.previousResult;
+      return { ...this.previousResult, failed: true };
     } finally {
       clearTimeout(timeoutId);
     }

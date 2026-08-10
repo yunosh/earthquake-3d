@@ -38,8 +38,8 @@ export class AnimationController {
       this.endTimeMs = 0;
       this.timeSpanMs = 0;
     } else {
-      this.startTimeMs = this.sortedEvents[0].timestamp.getTime();
-      this.endTimeMs = this.sortedEvents[this.sortedEvents.length - 1].timestamp.getTime();
+      this.startTimeMs = this.sortedEvents[0]!.timestamp.getTime();
+      this.endTimeMs = this.sortedEvents[this.sortedEvents.length - 1]!.timestamp.getTime();
       this.timeSpanMs = this.endTimeMs - this.startTimeMs;
     }
 

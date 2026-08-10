@@ -1,4 +1,4 @@
-# Implementation Plan: Campi Flegrei 3D Earthquake Visualization
+  # Implementation Plan: Campi Flegrei 3D Earthquake Visualization
 
 ## Overview
 
@@ -57,7 +57,7 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Generate mixed INGV responses (valid + malformed lines) and verify: valid records parsed correctly, malformed records discarded, count(valid) + count(discarded) = total non-header lines
     - **Validates: Requirements 1.6**
 
-- [~] 3. Checkpoint - Data Fetcher complete
+- [x] 3. Checkpoint - Data Fetcher complete
   - Ensure all tests pass, ask the user if questions arise.
   - Commit: `git add -A && git commit -m 'feat: implement data fetcher with INGV API integration'`
 
@@ -86,8 +86,8 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Generate earthquake events within bounding box, verify injective mapping (distinct geo-coords → distinct scene positions) and ordering preservation (east → larger x, north → larger z, deeper → lower y)
     - **Validates: Requirements 2.1**
 
-- [ ] 5. Earthquake point rendering
-  - [-] 5.1 Implement InstancedMesh-based point rendering
+- [x] 5. Earthquake point rendering
+  - [x] 5.1 Implement InstancedMesh-based point rendering
     - In `Viewer`, implement `updateVisibleEvents(events: VisibleEvent[]): void`
     - Use `InstancedMesh` with `SphereGeometry` for performance (up to ~1000 simultaneous points)
     - Set per-instance transform matrix (position from coordinate mapper, scale from magnitude)
@@ -101,7 +101,7 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Convert screen-projected px to world-space radius based on camera distance
     - _Requirements: 2.3, 2.6_
 
-  - [~] 5.3 Write property test for magnitude-to-radius monotonicity
+  - [x] 5.3 Write property test for magnitude-to-radius monotonicity
     - **Property 3: Magnitude-to-Radius Monotonicity and Clamping**
     - Generate pairs of magnitude values, verify: radius non-decreasing with magnitude, clamped at bounds, linear between 0 and 4
     - **Validates: Requirements 2.3, 2.6**
@@ -112,12 +112,12 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Hue transition orange → blue, saturation decreasing, lightness decreasing
     - _Requirements: 2.4_
 
-  - [~] 5.5 Write property test for temporal color age ordering
+  - [x] 5.5 Write property test for temporal color age ordering
     - **Property 4: Temporal Color Age Ordering**
     - Generate pairs (ageA > ageB), verify color of A is at least as faded (equal or lower saturation/lightness) as color of B
     - **Validates: Requirements 2.4**
 
-  - [-] 5.6 Implement tooltip on hover
+  - [x] 5.6 Implement tooltip on hover
     - In `Viewer`, implement raycasting on `pointermove` to detect hovered earthquake point
     - `showTooltip(event, screenPos)` displays: magnitude (1 decimal), depth (2 decimals, km), timestamp (ISO 8601)
     - `hideTooltip()` removes tooltip
@@ -125,12 +125,12 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Commit: `git add -A && git commit -m 'feat: implement earthquake point rendering, magnitude scaling, color encoding, and tooltip'`
     - _Requirements: 2.5, 2.6_
 
-- [~] 6. Checkpoint - 3D Viewer rendering complete
+- [x] 6. Checkpoint - 3D Viewer rendering complete
   - Ensure all tests pass, ask the user if questions arise.
   - Commit: `git add -A && git commit -m 'feat: implement 3D viewer with earthquake point rendering'`
 
-- [ ] 7. Animation Controller
-  - [-] 7.1 Implement animation playback logic
+- [x] 7. Animation Controller
+  - [x] 7.1 Implement animation playback logic
     - Create `src/animation-controller.ts` with `AnimationController` class
     - Implement `play()`, `pause()`, `reset()`, `setSpeed(multiplier)`
     - `tick(deltaTime)`: advance `virtualTime` linearly from startDate to endDate
@@ -142,23 +142,23 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Commit: `git add -A && git commit -m 'feat: implement animation controller with playback logic'`
     - _Requirements: 4.1, 4.2, 4.3, 4.5, 4.6, 4.7, 4.8_
 
-  - [~] 7.2 Write property test for chronological visibility order
+  - [x] 7.2 Write property test for chronological visibility order
     - **Property 5: Chronological Visibility Order**
     - Generate event sets and arbitrary virtual time T, verify: visible set = exactly events with timestamp ≤ T, no event with timestamp > T visible
     - **Validates: Requirements 4.1, 4.2, 4.5**
 
-  - [~] 7.3 Write property test for animation progress monotonicity
+  - [x] 7.3 Write property test for animation progress monotonicity
     - **Property 6: Animation Progress Monotonicity**
     - Generate sequences of positive deltaTimes, verify: virtualTime strictly non-decreasing, progress moves from 0.0 toward 1.0 monotonically
     - **Validates: Requirements 4.2, 4.3**
 
-  - [~] 7.4 Write property test for speed change preserves position
+  - [x] 7.4 Write property test for speed change preserves position
     - **Property 7: Speed Change Preserves Position**
     - Generate animation state + speed change, verify: virtualTime and visible events unchanged immediately after speed change
     - **Validates: Requirements 5.6**
 
-- [ ] 8. Rotation Engine
-  - [-] 8.1 Implement auto-rotation with interaction pause
+- [x] 8. Rotation Engine
+  - [x] 8.1 Implement auto-rotation with interaction pause
     - Create `src/rotation-engine.ts` with `RotationEngine` class
     - Use Three.js `OrbitControls` with `autoRotate = true`, `autoRotateSpeed` set for 10°/s
     - `onInteractionStart()`: immediately set `autoRotate = false`
@@ -167,8 +167,8 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Commit: `git add -A && git commit -m 'feat: implement rotation engine with auto-rotation and interaction pause'`
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 9. Time Slider UI
-  - [~] 9.1 Implement time slider and playback controls
+- [x] 9. Time Slider UI
+  - [x] 9.1 Implement time slider and playback controls
     - Create `src/ui/time-slider.ts` with `TimeSlider` class
     - Render: two `<input type="date">` (start/end, range 2000-01-01 to today, default last 7 days)
     - Speed selector: `<select>` with 0.25x, 0.5x, 1x, 2x, 4x, 8x options
@@ -181,12 +181,12 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Commit: `git add -A && git commit -m 'feat: implement time slider UI and playback controls'`
     - _Requirements: 5.1, 5.2, 5.3, 5.7, 5.8_
 
-- [~] 10. Checkpoint - All modules implemented
+- [x] 10. Checkpoint - All modules implemented
   - Ensure all tests pass, ask the user if questions arise.
   - Commit: `git add -A && git commit -m 'feat: implement animation controller, rotation engine, and time slider'`
 
-- [ ] 11. Integration and wiring
-  - [~] 11.1 Wire all modules together in main entry point
+- [x] 11. Integration and wiring
+  - [x] 11.1 Wire all modules together in main entry point
     - Create `src/main.ts` as application entry point
     - Initialize `DataFetcher`, `Viewer`, `AnimationController`, `RotationEngine`, `TimeSlider`
     - Connect data flow: TimeSlider → DataFetcher → AnimationController → Viewer
@@ -197,14 +197,14 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - WebGL availability check at startup
     - _Requirements: 1.4, 1.5, 5.4, 5.5, 5.6, 6.4, 6.6_
 
-  - [~] 11.2 Implement error handling and recovery
+  - [x] 11.2 Implement error handling and recovery
     - Add WebGL context lost/restored event listeners with 5s recovery attempt
     - Implement error message display through TimeSlider UI for all failure scenarios
     - Ensure no unhandled Promise rejections — all async paths have error handlers
     - Implement data retention on fetch failure (keep previous data visible)
     - _Requirements: 1.4, 1.5, 1.6, 6.4, 6.5_
 
-  - [~] 11.3 Add CSS styling and responsive layout
+  - [x] 11.3 Add CSS styling and responsive layout
     - Create `src/style.css` with layout for canvas (full viewport) and UI overlay
     - Ensure no horizontal scrollbar for viewports 320px to 3840px
     - Position time slider and controls as overlay on top of 3D scene
@@ -212,14 +212,14 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Commit: `git add -A && git commit -m 'feat: integrate all modules, add error handling and responsive styling'`
     - _Requirements: 6.3_
 
-  - [~] 11.4 Write integration tests
+  - [x] 11.4 Write integration tests
     - Set up MSW (Mock Service Worker) for INGV API mocking
     - Test: DataFetcher correctly parses mocked INGV response
     - Test: AnimationController produces correct visible events for known dataset
     - Test: Full pipeline from fetch → animation → visible event calculation
     - _Requirements: 1.1, 1.2, 4.1, 4.2_
 
-- [~] 12. Final checkpoint - Ensure all tests pass
+- [x] 12. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
   - Commit: `git add -A && git commit -m 'feat: integrate all modules and add integration tests'`
 

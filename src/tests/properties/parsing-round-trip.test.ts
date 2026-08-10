@@ -19,18 +19,20 @@ describe('Feature: campi-flegrei-3d-earthquakes, Property 1: Parsing Round-Trip 
   const eventIdArb = fc.stringMatching(/^[a-z0-9]{1,20}$/);
 
   // Arbitrary for valid timestamps (ISO 8601, second precision, as UTC strings)
-  // We generate a timestamp string that looks like INGV format (no Z suffix),
-  // and also the expected Date object from parsing that string.
-  const timestampArb = fc.date({
-    min: new Date('2000-01-01T00:00:00Z'),
-    max: new Date('2025-12-31T23:59:59Z'),
-  }).map(d => {
-    // Round to second precision and produce INGV-formatted string
-    d.setMilliseconds(0);
-    // Format as INGV does: "YYYY-MM-DDTHH:mm:ss" (without trailing Z)
-    const formatted = d.toISOString().replace(/\.\d{3}Z$/, '');
-    // The parsed result will be new Date(formatted) which is what the parser produces
-    return { formatted, expectedDate: new Date(formatted) };
+  // We generate individual components to avoid invalid Date edge cases from fc.date()
+  const timestampArb = fc.record({
+    year: fc.integer({ min: 2000, max: 2025 }),
+    month: fc.integer({ min: 1, max: 12 }),
+    day: fc.integer({ min: 1, max: 28 }), // Use 28 to avoid invalid day-of-month
+    hour: fc.integer({ min: 0, max: 23 }),
+    minute: fc.integer({ min: 0, max: 59 }),
+    second: fc.integer({ min: 0, max: 59 }),
+  }).map(({ year, month, day, hour, minute, second }) => {
+    const pad = (n: number, len = 2) => n.toString().padStart(len, '0');
+    const formatted = `${year}-${pad(month)}-${pad(day)}T${pad(hour)}:${pad(minute)}:${pad(second)}`;
+    // The parser does new Date(formatted) — match exactly what the parser produces
+    const expectedDate = new Date(formatted);
+    return { formatted, expectedDate };
   });
 
   // Arbitrary for latitude within bounding box

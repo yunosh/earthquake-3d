@@ -79,6 +79,8 @@ export interface FetchOptions {
 export interface FetchResult {
   events: EarthquakeEvent[];
   warnings: string[];
+  /** Indicates a fetch failure occurred (network error, timeout, HTTP error). Previous data is retained in `events`. */
+  failed?: boolean;
 }
 
 export interface GeoBounds {
