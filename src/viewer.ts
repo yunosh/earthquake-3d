@@ -396,10 +396,10 @@ export class Viewer {
 
     // Water plane (covers entire bounds)
     const waterShape = new THREE.Shape();
-    waterShape.moveTo(nw.x, nw.z);
-    waterShape.lineTo(ne.x, ne.z);
-    waterShape.lineTo(se.x, se.z);
-    waterShape.lineTo(sw.x, sw.z);
+    waterShape.moveTo(nw.x, -nw.z);
+    waterShape.lineTo(ne.x, -ne.z);
+    waterShape.lineTo(se.x, -se.z);
+    waterShape.lineTo(sw.x, -sw.z);
     waterShape.closePath();
 
     const waterGeometry = new THREE.ShapeGeometry(waterShape);
@@ -428,16 +428,16 @@ export class Viewer {
     const firstCoast = coastScenePoints[0];
     const lastCoast = coastScenePoints[coastScenePoints.length - 1];
 
-    landShape.moveTo(firstCoast.x, firstCoast.z);
+    landShape.moveTo(firstCoast.x, -firstCoast.z);
     // Up to northwest corner (same x as first coast point, max z)
-    landShape.lineTo(nw.x, nw.z);
+    landShape.lineTo(nw.x, -nw.z);
     // Along top to northeast
-    landShape.lineTo(ne.x, ne.z);
+    landShape.lineTo(ne.x, -ne.z);
     // Down to last coast point
-    landShape.lineTo(lastCoast.x, lastCoast.z);
+    landShape.lineTo(lastCoast.x, -lastCoast.z);
     // Follow coastline from east to west (reverse order)
     for (let i = coastScenePoints.length - 1; i >= 0; i--) {
-      landShape.lineTo(coastScenePoints[i].x, coastScenePoints[i].z);
+      landShape.lineTo(coastScenePoints[i].x, -coastScenePoints[i].z);
     }
     landShape.closePath();
 
