@@ -51,6 +51,7 @@ export class Viewer {
   private pointer = new THREE.Vector2();
   private currentVisibleEvents: EarthquakeEvent[] = [];
   private pointerMoveHandler: ((e: PointerEvent) => void) | null = null;
+  private clickHandler: ((e: PointerEvent) => void) | null = null;
 
   constructor(config: ViewerConfig) {
     this.config = config;
@@ -102,6 +103,10 @@ export class Viewer {
       if (this.pointerMoveHandler) {
         canvas.removeEventListener('pointermove', this.pointerMoveHandler);
         this.pointerMoveHandler = null;
+      }
+      if (this.clickHandler) {
+        canvas.removeEventListener('pointerdown', this.clickHandler);
+        this.clickHandler = null;
       }
     }
 
@@ -182,7 +187,7 @@ export class Viewer {
       // Compute fixed world-space radius from magnitude
       // magnitudeScale.toRadius gives 2-16px range, map to 0.05-0.4 world units
       const screenPx = magnitudeScale.toRadius(ev.magnitude);
-      const worldRadius = screenPx * 0.025; // 2px→0.05, 16px→0.4 world units
+      const worldRadius = screenPx * 0.06; // 2px→0.12, 16px→0.96 world units
 
       // Apply highlight scale pulse: if isNew, scale = 1.5 - 0.5 * highlightProgress
       let scale = worldRadius;
@@ -701,6 +706,10 @@ export class Viewer {
       'pointermove',
       this.pointerMoveHandler
     );
+
+    // Click for persistent tooltip on earthquake points
+    this.clickHandler = (e: PointerEvent) => this.onPointerClick(e);
+    this.renderer.domElement.addEventListener('pointerdown', this.clickHandler);
   }
 
   private onPointerMove(e: PointerEvent): void {
@@ -727,6 +736,39 @@ export class Viewer {
       if (instanceId !== undefined && instanceId < this.currentVisibleEvents.length) {
         const event = this.currentVisibleEvents[instanceId]!;
         // Screen position relative to container
+        const screenPos = {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top,
+        };
+        this.showTooltip(event, screenPos);
+        return;
+      }
+    }
+
+    this.hideTooltip();
+  }
+
+  private onPointerClick(e: PointerEvent): void {
+    if (!this.instancedMesh || this.currentVisibleEvents.length === 0) {
+      this.hideTooltip();
+      return;
+    }
+
+    const canvas = this.renderer.domElement;
+    const rect = canvas.getBoundingClientRect();
+
+    this.pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    this.pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+    const intersects = this.raycaster.intersectObject(this.instancedMesh);
+
+    if (intersects.length > 0) {
+      const hit = intersects[0]!;
+      const instanceId = hit.instanceId;
+
+      if (instanceId !== undefined && instanceId < this.currentVisibleEvents.length) {
+        const event = this.currentVisibleEvents[instanceId]!;
         const screenPos = {
           x: e.clientX - rect.left,
           y: e.clientY - rect.top,
