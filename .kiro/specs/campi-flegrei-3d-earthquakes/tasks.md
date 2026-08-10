@@ -6,8 +6,8 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
 
 ## Tasks
 
-- [ ] 1. Project scaffolding and core interfaces
-  - [-] 1.1 Initialize Vite + TypeScript project with Three.js
+- [x] 1. Project scaffolding and core interfaces
+  - [x] 1.1 Initialize Vite + TypeScript project with Three.js
     - Run `npm create vite@latest . -- --template vanilla-ts`
     - Install dependencies: `three`, `@types/three`
     - Install dev dependencies: `vitest`, `fast-check`, `msw`
@@ -19,20 +19,20 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Make initial commit: `git add -A && git commit -m 'chore: initialize Vite + TypeScript project with Three.js'`
     - _Requirements: 6.1, 6.2_
 
-  - [~] 1.2 Define core data model interfaces and types
+  - [x] 1.2 Define core data model interfaces and types
     - Create `src/types.ts` with all interfaces: `EarthquakeEvent`, `VisibleEvent`, `ScenePosition`, `ColorMapping`, `DepthScale`, `MagnitudeScale`, `RawINGVRecord`, `FetchOptions`, `FetchResult`, `GeoBounds`
     - Export all types as named exports
     - _Requirements: 1.2, 2.1, 2.3, 2.4_
 
 - [ ] 2. Data Fetcher implementation
-  - [~] 2.1 Implement INGV API URL builder and response parser
+  - [x] 2.1 Implement INGV API URL builder and response parser
     - Create `src/data-fetcher.ts` with `DataFetcher` class
     - Implement `buildUrl(options: FetchOptions): string` method constructing the INGV FDSNWS query URL with parameters: `starttime`, `endtime`, `minlat`, `maxlat`, `minlon`, `maxlon`, `format=text`
     - Implement `parseTextResponse(text: string): FetchResult` parsing pipe-delimited text, skipping header lines starting with `#`, extracting EventID, Time, Latitude, Longitude, Depth/Km, Magnitude, MagType, EventLocationName
     - Discard malformed records (missing fields, unparseable numbers, invalid dates) and collect them in `warnings[]`
     - _Requirements: 1.1, 1.2, 1.6_
 
-  - [~] 2.2 Implement fetch with timeout and error handling
+  - [-] 2.2 Implement fetch with timeout and error handling
     - Implement `fetch(options: FetchOptions): Promise<FetchResult>` using `AbortController` with configurable timeout (default 15s)
     - Handle network errors, HTTP error codes, and timeout
     - Return previously loaded data on failure (retain previous data)
@@ -62,7 +62,7 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
   - Commit: `git add -A && git commit -m 'feat: implement data fetcher with INGV API integration'`
 
 - [ ] 4. 3D Viewer and scene setup
-  - [~] 4.1 Implement core 3D scene with Three.js
+  - [x] 4.1 Implement core 3D scene with Three.js
     - Create `src/viewer.ts` with `Viewer` class
     - Initialize `WebGLRenderer`, `PerspectiveCamera` (FOV 60°), `Scene`
     - Add `AmbientLight` + `DirectionalLight`
@@ -72,7 +72,7 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Implement `dispose()` for cleanup
     - _Requirements: 2.1, 2.2, 6.2, 6.3, 6.4, 6.5_
 
-  - [~] 4.2 Implement coordinate mapping and depth scaling
+  - [-] 4.2 Implement coordinate mapping and depth scaling
     - Create `src/coordinate-mapper.ts` with functions:
       - `geoToScene(lat, lon, depth, bounds, depthScale): ScenePosition` — linear projection centered on caldera center (40.827°N, 14.139°E)
       - `computeDepthScale(events): DepthScale` — dynamic scaling with min depth 2km for shallow datasets
