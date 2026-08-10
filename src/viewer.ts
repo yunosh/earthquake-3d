@@ -46,9 +46,8 @@ export class Viewer {
   // Tooltip element
   private tooltipEl: HTMLDivElement | null = null;
 
-  // Raycasting for tooltip hover
-  private raycaster = new THREE.Raycaster();
-  private pointer = new THREE.Vector2();
+  // Screen-space hit detection for tooltip hover
+  private instancePositions: THREE.Vector3[] = [];
   private currentVisibleEvents: EarthquakeEvent[] = [];
   private pointerMoveHandler: ((e: PointerEvent) => void) | null = null;
   private clickHandler: ((e: PointerEvent) => void) | null = null;
@@ -171,6 +170,18 @@ export class Viewer {
     const count = Math.min(events.length, Viewer.MAX_INSTANCES);
     const dummy = new THREE.Object3D();
 
+    // Reset instance positions for screen-space hit detection
+    this.instancePositions = [];
+
+    if (count === 0) {
+      mesh.count = 0;
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) {
+        mesh.instanceColor.needsUpdate = true;
+      }
+      return;
+    }
+
     for (let i = 0; i < count; i++) {
       const ve = events[i]!;
       const ev = ve.event;
@@ -202,6 +213,9 @@ export class Viewer {
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
 
+      // Store world position for screen-space hit detection
+      this.instancePositions.push(new THREE.Vector3(pos.x, pos.y, pos.z));
+
       // Set per-instance color from age
       const threeColor = ageToThreeColor(ve.age);
       mesh.setColorAt(i, threeColor);
@@ -221,15 +235,6 @@ export class Viewer {
   private initInstancedMesh(): void {
     // SphereGeometry with unit radius (scaled per-instance)
     this.sphereGeometry = new THREE.SphereGeometry(1, 16, 12);
-
-    // Override bounding sphere to encompass all possible instance positions.
-    // Required for Three.js InstancedMesh raycasting (initial culling check).
-    // Without this, the default bounding sphere (radius 1 at origin) causes the
-    // raycaster to skip instances positioned far from the origin.
-    this.sphereGeometry.boundingSphere = new THREE.Sphere(
-      new THREE.Vector3(0, -5, 0),
-      50
-    );
 
     // MeshStandardMaterial to interact with scene lighting
     this.instanceMaterial = new THREE.MeshStandardMaterial({
@@ -721,73 +726,74 @@ export class Viewer {
     this.renderer.domElement.addEventListener('pointerdown', this.clickHandler);
   }
 
-  private onPointerMove(e: PointerEvent): void {
-    if (!this.instancedMesh || this.currentVisibleEvents.length === 0) {
-      this.hideTooltip();
-      return;
+  private findClosestInstance(clientX: number, clientY: number): { index: number; screenPos: { x: number; y: number } } | null {
+    if (!this.instancedMesh || this.instancePositions.length === 0) {
+      return null;
     }
 
     const canvas = this.renderer.domElement;
     const rect = canvas.getBoundingClientRect();
+    const mouseX = clientX - rect.left;
+    const mouseY = clientY - rect.top;
+    const width = rect.width;
+    const height = rect.height;
 
-    // Convert pointer position to normalized device coordinates (-1 to +1)
-    this.pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    this.pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    let closestIndex = -1;
+    let closestDist = Infinity;
+    const threshold = 20; // pixels
 
-    // Perform raycasting
-    this.raycaster.setFromCamera(this.pointer, this.camera);
-    const intersects = this.raycaster.intersectObject(this.instancedMesh);
+    const tempVec = new THREE.Vector3();
 
-    if (intersects.length > 0) {
-      const hit = intersects[0]!;
-      const instanceId = hit.instanceId;
+    for (let i = 0; i < this.instancePositions.length; i++) {
+      // Project world position to screen coordinates
+      tempVec.copy(this.instancePositions[i]!);
+      tempVec.project(this.camera);
 
-      if (instanceId !== undefined && instanceId < this.currentVisibleEvents.length) {
-        const event = this.currentVisibleEvents[instanceId]!;
-        // Screen position relative to container
-        const screenPos = {
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top,
-        };
-        this.showTooltip(event, screenPos);
-        return;
+      // Convert from NDC [-1,1] to screen pixels
+      const screenX = (tempVec.x * 0.5 + 0.5) * width;
+      const screenY = (-tempVec.y * 0.5 + 0.5) * height;
+
+      // Skip points behind the camera
+      if (tempVec.z > 1) continue;
+
+      const dx = screenX - mouseX;
+      const dy = screenY - mouseY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < threshold && dist < closestDist) {
+        closestDist = dist;
+        closestIndex = i;
       }
     }
 
-    this.hideTooltip();
+    if (closestIndex >= 0) {
+      return {
+        index: closestIndex,
+        screenPos: { x: mouseX, y: mouseY },
+      };
+    }
+
+    return null;
+  }
+
+  private onPointerMove(e: PointerEvent): void {
+    const hit = this.findClosestInstance(e.clientX, e.clientY);
+    if (hit && hit.index < this.currentVisibleEvents.length) {
+      const event = this.currentVisibleEvents[hit.index]!;
+      this.showTooltip(event, hit.screenPos);
+    } else {
+      this.hideTooltip();
+    }
   }
 
   private onPointerClick(e: PointerEvent): void {
-    if (!this.instancedMesh || this.currentVisibleEvents.length === 0) {
+    const hit = this.findClosestInstance(e.clientX, e.clientY);
+    if (hit && hit.index < this.currentVisibleEvents.length) {
+      const event = this.currentVisibleEvents[hit.index]!;
+      this.showTooltip(event, hit.screenPos);
+    } else {
       this.hideTooltip();
-      return;
     }
-
-    const canvas = this.renderer.domElement;
-    const rect = canvas.getBoundingClientRect();
-
-    this.pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    this.pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-    this.raycaster.setFromCamera(this.pointer, this.camera);
-    const intersects = this.raycaster.intersectObject(this.instancedMesh);
-
-    if (intersects.length > 0) {
-      const hit = intersects[0]!;
-      const instanceId = hit.instanceId;
-
-      if (instanceId !== undefined && instanceId < this.currentVisibleEvents.length) {
-        const event = this.currentVisibleEvents[instanceId]!;
-        const screenPos = {
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top,
-        };
-        this.showTooltip(event, screenPos);
-        return;
-      }
-    }
-
-    this.hideTooltip();
   }
 
   private onWindowResize(): void {
