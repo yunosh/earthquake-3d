@@ -120,6 +120,11 @@ export class AnimationController {
   }
 
   private computeVisibleEvents(): VisibleEvent[] {
+    // Don't show any events until animation has been started
+    if (this.state === 'stopped') {
+      return [];
+    }
+
     const visible: VisibleEvent[] = [];
 
     for (const event of this.sortedEvents) {

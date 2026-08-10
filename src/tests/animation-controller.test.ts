@@ -244,7 +244,8 @@ describe('AnimationController', () => {
       const results: VisibleEvent[][] = [];
       controller.onFrame((visible) => results.push(visible));
 
-      // Even without playing, tick should compute visible events at current position
+      // Events are only visible after play() is called
+      controller.play();
       controller.tick(0);
       expect(results[0].length).toBe(1);
       expect(results[0][0].event.id).toBe('1');
@@ -261,6 +262,7 @@ describe('AnimationController', () => {
       const results: VisibleEvent[][] = [];
       controller.onFrame((visible) => results.push(visible));
 
+      controller.play();
       controller.tick(0);
       expect(results[0][0].age).toBe(0);
     });
@@ -306,6 +308,7 @@ describe('AnimationController', () => {
       const results: VisibleEvent[][] = [];
       controller.onFrame((visible) => results.push(visible));
 
+      controller.play();
       controller.tick(0); // first tick, event 1 just appeared
       expect(results[0][0].isNew).toBe(true);
       expect(results[0][0].highlightProgress).toBe(0);

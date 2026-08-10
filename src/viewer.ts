@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { EarthquakeEvent, GeoBounds, VisibleEvent, DepthScale } from './types';
 import { geoToScene, computeDepthScale } from './coordinate-mapper';
-import { createMagnitudeScale, screenPxToWorldRadius } from './magnitude-scale';
+import { createMagnitudeScale } from './magnitude-scale';
 import { ageToThreeColor } from './color-mapper';
+import { COASTLINE_POLYLINES } from './coastline-data';
 
 export interface ViewerConfig {
   container: HTMLElement;
@@ -64,7 +65,7 @@ export class Viewer {
     this.initCamera();
     this.initScene();
     this.initLights();
-    this.initReferencePlane();
+    this.initCoastline();
     this.initDepthAxis();
     this.initEventListeners();
     this.startRenderLoop();
@@ -160,11 +161,6 @@ export class Viewer {
       this.depthScale = computeDepthScale(events.map((ve) => ve.event));
     }
 
-    // Camera distance for screen-px to world-radius conversion
-    const cameraDistance = this.camera.position.length();
-    const fovRadians = THREE.MathUtils.degToRad(this.camera.fov);
-    const viewportHeight = this.renderer.domElement.clientHeight || 600;
-
     const count = Math.min(events.length, Viewer.MAX_INSTANCES);
     const dummy = new THREE.Object3D();
 
@@ -181,14 +177,10 @@ export class Viewer {
         this.depthScale
       );
 
-      // Compute world-space radius from magnitude
+      // Compute fixed world-space radius from magnitude
+      // magnitudeScale.toRadius gives 2-16px range, map to 0.05-0.4 world units
       const screenPx = magnitudeScale.toRadius(ev.magnitude);
-      const worldRadius = screenPxToWorldRadius(
-        screenPx,
-        cameraDistance,
-        fovRadians,
-        viewportHeight
-      );
+      const worldRadius = screenPx * 0.025; // 2px→0.05, 16px→0.4 world units
 
       // Apply highlight scale pulse: if isNew, scale = 1.5 - 0.5 * highlightProgress
       let scale = worldRadius;
@@ -385,23 +377,33 @@ export class Viewer {
     this.scene.add(directionalLight);
   }
 
-  private initReferencePlane(): void {
-    // Semi-transparent plane at y=0 representing the earth's surface
-    const planeSize = this.computePlaneSize();
-    const geometry = new THREE.PlaneGeometry(planeSize.width, planeSize.height);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0x4a7c59,
+  private initCoastline(): void {
+    // Use a surface depth scale (coastline is at the surface)
+    const surfaceDepthScale: DepthScale = {
+      minDepth: 0,
+      maxDepth: 2,
+      sceneMinY: -4,
+      sceneMaxY: 0,
+      toSceneY: (_d: number) => 0,
+    };
+
+    const material = new THREE.LineBasicMaterial({
+      color: 0x4dc9c9, // teal
       transparent: true,
-      opacity: 0.3,
-      side: THREE.DoubleSide,
-      depthWrite: false,
+      opacity: 0.6,
     });
-    const plane = new THREE.Mesh(geometry, material);
-    // PlaneGeometry is created in XY plane, rotate to lie in XZ plane (horizontal)
-    plane.rotation.x = -Math.PI / 2;
-    plane.position.y = 0;
-    plane.name = 'referencePlane';
-    this.scene.add(plane);
+
+    for (const polyline of COASTLINE_POLYLINES) {
+      const points: THREE.Vector3[] = [];
+      for (const [lat, lon] of polyline) {
+        const pos = geoToScene(lat, lon, 0, this.config.bounds, surfaceDepthScale);
+        points.push(new THREE.Vector3(pos.x, 0.01, pos.z)); // slightly above reference plane
+      }
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const line = new THREE.Line(geometry, material);
+      line.name = 'coastline';
+      this.scene.add(line);
+    }
   }
 
   private initDepthAxis(): void {
@@ -488,18 +490,6 @@ export class Viewer {
     if (maxDepth <= 6) return 1;
     if (maxDepth <= 12) return 2;
     return 5;
-  }
-
-  private computePlaneSize(): { width: number; height: number } {
-    // Compute plane size based on geographic bounds
-    // Using ~1 unit = 100m approximation, scaled to bounding box
-    const latRange = this.config.bounds.maxLat - this.config.bounds.minLat;
-    const lonRange = this.config.bounds.maxLon - this.config.bounds.minLon;
-    // 1 degree lat ≈ 111km, 1 degree lon ≈ 85km at this latitude
-    const heightKm = latRange * 111;
-    const widthKm = lonRange * 85;
-    // Scale: 1 unit = 0.5km → multiply by 2
-    return { width: widthKm * 2, height: heightKm * 2 };
   }
 
   private createTextSprite(text: string): THREE.Sprite {

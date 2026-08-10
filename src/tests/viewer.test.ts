@@ -120,21 +120,6 @@ describe('Viewer', () => {
     expect(directional).toBeDefined();
   });
 
-  it('should add semi-transparent reference plane at y=0', () => {
-    const config = createViewerConfig(container);
-    viewer = new Viewer(config);
-    viewer.init();
-
-    const scene = viewer.getScene();
-    const plane = scene.getObjectByName('referencePlane') as THREE.Mesh;
-    expect(plane).toBeDefined();
-    expect(plane.position.y).toBe(0);
-
-    const material = plane.material as THREE.MeshStandardMaterial;
-    expect(material.transparent).toBe(true);
-    expect(material.opacity).toBeLessThan(1);
-  });
-
   it('should add depth axis group with guide lines and labels', () => {
     const config = createViewerConfig(container);
     viewer = new Viewer(config);

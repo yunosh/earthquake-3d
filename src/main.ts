@@ -148,6 +148,10 @@ async function main(): Promise<void> {
     viewer.updateVisibleEvents(visibleEvents);
     if (animationController) {
       timeSlider.setProgress(animationController.getProgress());
+      // Reset play button when animation reaches the end
+      if (animationController.getState() === 'paused' && animationController.getProgress() >= 1.0) {
+        timeSlider.setPlaying(false);
+      }
     }
     timeSlider.setVirtualTime(virtualTime);
   }

@@ -85,6 +85,13 @@ export class TimeSlider {
     this.speedSelect.disabled = loading;
   }
 
+  /** Externally set the play/pause state (e.g., when animation ends) */
+  setPlaying(playing: boolean): void {
+    this.playing = playing;
+    this.playPauseBtn.textContent = playing ? 'Pause' : 'Play';
+    this.playPauseBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+  }
+
   showError(message: string): void {
     this.showMessage(message, 'error');
   }

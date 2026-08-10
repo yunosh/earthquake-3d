@@ -215,6 +215,7 @@ describe('Integration: AnimationController with known dataset', () => {
     const results: VisibleEvent[][] = [];
     controller.onFrame((visible) => results.push([...visible]));
 
+    controller.play();
     controller.tick(0);
 
     expect(results[0]).toHaveLength(1);
