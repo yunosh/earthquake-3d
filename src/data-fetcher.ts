@@ -7,7 +7,7 @@ const DEFAULT_MAX_LAT = 40.90;
 const DEFAULT_MIN_LON = 14.03;
 const DEFAULT_MAX_LON = 14.22;
 const DEFAULT_TIMEOUT_MS = 15000;
-const DEFAULT_TIME_RANGE_DAYS = 7;
+const DEFAULT_TIME_RANGE_DAYS = 30;
 
 /**
  * Fetches and parses earthquake data from the INGV FDSNWS Event Service.

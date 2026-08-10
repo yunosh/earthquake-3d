@@ -83,7 +83,7 @@ async function main(): Promise<void> {
     container: uiContainer,
     minDate: new Date('2000-01-01T00:00:00Z'),
     maxDate: new Date(),
-    defaultRange: 7,
+    defaultRange: 30,
   });
 
   // 4. Set up OrbitControls on the Viewer's camera/renderer
@@ -172,10 +172,10 @@ async function main(): Promise<void> {
       timeSlider.showWarning(
         `${result.warnings.length} Einträge konnten nicht verarbeitet werden.`
       );
-    }
-
-    if (result.events.length === 0) {
+    } else if (result.events.length === 0) {
       timeSlider.showInfo('Keine Erdbeben im gewählten Zeitraum gefunden.');
+    } else {
+      timeSlider.showInfo(`${result.events.length} Erdbeben geladen.`);
     }
   }
 
