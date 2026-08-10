@@ -24,7 +24,7 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Export all types as named exports
     - _Requirements: 1.2, 2.1, 2.3, 2.4_
 
-- [ ] 2. Data Fetcher implementation
+- [x] 2. Data Fetcher implementation
   - [x] 2.1 Implement INGV API URL builder and response parser
     - Create `src/data-fetcher.ts` with `DataFetcher` class
     - Implement `buildUrl(options: FetchOptions): string` method constructing the INGV FDSNWS query URL with parameters: `starttime`, `endtime`, `minlat`, `maxlat`, `minlon`, `maxlon`, `format=text`
@@ -32,7 +32,7 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Discard malformed records (missing fields, unparseable numbers, invalid dates) and collect them in `warnings[]`
     - _Requirements: 1.1, 1.2, 1.6_
 
-  - [-] 2.2 Implement fetch with timeout and error handling
+  - [x] 2.2 Implement fetch with timeout and error handling
     - Implement `fetch(options: FetchOptions): Promise<FetchResult>` using `AbortController` with configurable timeout (default 15s)
     - Handle network errors, HTTP error codes, and timeout
     - Return previously loaded data on failure (retain previous data)
@@ -41,18 +41,18 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Commit: `git add -A && git commit -m 'feat: implement data fetcher with INGV API URL builder, parser, and error handling'`
     - _Requirements: 1.1, 1.3, 1.4, 1.5, 1.6_
 
-  - [~] 2.3 Write property test for parsing round-trip consistency
+  - [x] 2.3 Write property test for parsing round-trip consistency
     - **Property 1: Parsing Round-Trip Consistency**
     - Generate valid INGV text lines with fast-check (arbitrary EventID, valid timestamps, coordinates within bounding box, valid depth and magnitude)
     - Parse the generated line and verify extracted field values match the generated inputs within floating-point precision
     - **Validates: Requirements 1.2**
 
-  - [~] 2.4 Write property test for bounding box filter integrity
+  - [x] 2.4 Write property test for bounding box filter integrity
     - **Property 2: Bounding Box Filter Integrity**
     - Generate `EarthquakeEvent` objects with arbitrary coordinates and verify all parsed events have latitude in [40.78, 40.90] and longitude in [14.03, 14.22]
     - **Validates: Requirements 1.1**
 
-  - [~] 2.5 Write property test for malformed record filtering
+  - [x] 2.5 Write property test for malformed record filtering
     - **Property 8: Malformed Record Filtering**
     - Generate mixed INGV responses (valid + malformed lines) and verify: valid records parsed correctly, malformed records discarded, count(valid) + count(discarded) = total non-header lines
     - **Validates: Requirements 1.6**
@@ -61,7 +61,7 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
   - Ensure all tests pass, ask the user if questions arise.
   - Commit: `git add -A && git commit -m 'feat: implement data fetcher with INGV API integration'`
 
-- [ ] 4. 3D Viewer and scene setup
+- [x] 4. 3D Viewer and scene setup
   - [x] 4.1 Implement core 3D scene with Three.js
     - Create `src/viewer.ts` with `Viewer` class
     - Initialize `WebGLRenderer`, `PerspectiveCamera` (FOV 60°), `Scene`
@@ -72,7 +72,7 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Implement `dispose()` for cleanup
     - _Requirements: 2.1, 2.2, 6.2, 6.3, 6.4, 6.5_
 
-  - [-] 4.2 Implement coordinate mapping and depth scaling
+  - [x] 4.2 Implement coordinate mapping and depth scaling
     - Create `src/coordinate-mapper.ts` with functions:
       - `geoToScene(lat, lon, depth, bounds, depthScale): ScenePosition` — linear projection centered on caldera center (40.827°N, 14.139°E)
       - `computeDepthScale(events): DepthScale` — dynamic scaling with min depth 2km for shallow datasets
@@ -81,13 +81,13 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Commit: `git add -A && git commit -m 'feat: implement 3D viewer scene setup and coordinate mapping'`
     - _Requirements: 2.1_
 
-  - [~] 4.3 Write property test for coordinate projection bijectivity
+  - [x] 4.3 Write property test for coordinate projection bijectivity
     - **Property 9: Coordinate Projection Bijectivity and Ordering**
     - Generate earthquake events within bounding box, verify injective mapping (distinct geo-coords → distinct scene positions) and ordering preservation (east → larger x, north → larger z, deeper → lower y)
     - **Validates: Requirements 2.1**
 
 - [ ] 5. Earthquake point rendering
-  - [~] 5.1 Implement InstancedMesh-based point rendering
+  - [-] 5.1 Implement InstancedMesh-based point rendering
     - In `Viewer`, implement `updateVisibleEvents(events: VisibleEvent[]): void`
     - Use `InstancedMesh` with `SphereGeometry` for performance (up to ~1000 simultaneous points)
     - Set per-instance transform matrix (position from coordinate mapper, scale from magnitude)
@@ -95,7 +95,7 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Apply highlight effect (scale pulse 1.5x → 1.0x over 0.5s) for new events
     - _Requirements: 2.1, 2.3, 2.4, 4.4_
 
-  - [~] 5.2 Implement magnitude scaling
+  - [x] 5.2 Implement magnitude scaling
     - Create `src/magnitude-scale.ts` implementing `MagnitudeScale` interface
     - `toRadius(magnitude): number` — clamped linear mapping: mag ≤ 0 → 2px, mag ≥ 4 → 16px, linear interpolation between
     - Convert screen-projected px to world-space radius based on camera distance
@@ -106,7 +106,7 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Generate pairs of magnitude values, verify: radius non-decreasing with magnitude, clamped at bounds, linear between 0 and 4
     - **Validates: Requirements 2.3, 2.6**
 
-  - [~] 5.4 Implement temporal age color encoding
+  - [x] 5.4 Implement temporal age color encoding
     - Create `src/color-mapper.ts` implementing `ColorMapping` interface
     - `interpolate(age: number): THREE.Color` — HSL-based interpolation from fresh (#FF4500, bright orange-red) to faded (#4A6080, muted blue-grey)
     - Hue transition orange → blue, saturation decreasing, lightness decreasing
@@ -117,7 +117,7 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - Generate pairs (ageA > ageB), verify color of A is at least as faded (equal or lower saturation/lightness) as color of B
     - **Validates: Requirements 2.4**
 
-  - [~] 5.6 Implement tooltip on hover
+  - [-] 5.6 Implement tooltip on hover
     - In `Viewer`, implement raycasting on `pointermove` to detect hovered earthquake point
     - `showTooltip(event, screenPos)` displays: magnitude (1 decimal), depth (2 decimals, km), timestamp (ISO 8601)
     - `hideTooltip()` removes tooltip
@@ -130,7 +130,7 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
   - Commit: `git add -A && git commit -m 'feat: implement 3D viewer with earthquake point rendering'`
 
 - [ ] 7. Animation Controller
-  - [~] 7.1 Implement animation playback logic
+  - [-] 7.1 Implement animation playback logic
     - Create `src/animation-controller.ts` with `AnimationController` class
     - Implement `play()`, `pause()`, `reset()`, `setSpeed(multiplier)`
     - `tick(deltaTime)`: advance `virtualTime` linearly from startDate to endDate
@@ -158,7 +158,7 @@ Diese Implementierung baut eine webbasierte 3D-Erdbeben-Visualisierung als Singl
     - **Validates: Requirements 5.6**
 
 - [ ] 8. Rotation Engine
-  - [~] 8.1 Implement auto-rotation with interaction pause
+  - [-] 8.1 Implement auto-rotation with interaction pause
     - Create `src/rotation-engine.ts` with `RotationEngine` class
     - Use Three.js `OrbitControls` with `autoRotate = true`, `autoRotateSpeed` set for 10°/s
     - `onInteractionStart()`: immediately set `autoRotate = false`

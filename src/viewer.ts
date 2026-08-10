@@ -1,5 +1,8 @@
 import * as THREE from 'three';
-import { EarthquakeEvent, GeoBounds, VisibleEvent } from './types';
+import { EarthquakeEvent, GeoBounds, VisibleEvent, DepthScale } from './types';
+import { geoToScene, computeDepthScale } from './coordinate-mapper';
+import { createMagnitudeScale, screenPxToWorldRadius } from './magnitude-scale';
+import { ageToThreeColor } from './color-mapper';
 
 export interface ViewerConfig {
   container: HTMLElement;
@@ -23,6 +26,13 @@ export class Viewer {
   private depthAxisGroup!: THREE.Group;
   private currentMaxDepth = 5; // default 5km
 
+  // InstancedMesh for earthquake points
+  private static readonly MAX_INSTANCES = 1000;
+  private instancedMesh: THREE.InstancedMesh | null = null;
+  private sphereGeometry: THREE.SphereGeometry | null = null;
+  private instanceMaterial: THREE.MeshStandardMaterial | null = null;
+  private depthScale: DepthScale | null = null;
+
   // Callbacks
   private interactionStartCallbacks: Array<() => void> = [];
   private interactionEndCallbacks: Array<() => void> = [];
@@ -34,6 +44,12 @@ export class Viewer {
 
   // Tooltip element
   private tooltipEl: HTMLDivElement | null = null;
+
+  // Raycasting for tooltip hover
+  private raycaster = new THREE.Raycaster();
+  private pointer = new THREE.Vector2();
+  private currentVisibleEvents: EarthquakeEvent[] = [];
+  private pointerMoveHandler: ((e: PointerEvent) => void) | null = null;
 
   constructor(config: ViewerConfig) {
     this.config = config;
@@ -80,12 +96,31 @@ export class Viewer {
         canvas.removeEventListener('webglcontextrestored', this.contextRestoredHandler);
         this.contextRestoredHandler = null;
       }
+      if (this.pointerMoveHandler) {
+        canvas.removeEventListener('pointermove', this.pointerMoveHandler);
+        this.pointerMoveHandler = null;
+      }
     }
 
     // Remove tooltip
     if (this.tooltipEl && this.tooltipEl.parentNode) {
       this.tooltipEl.parentNode.removeChild(this.tooltipEl);
       this.tooltipEl = null;
+    }
+
+    // Dispose InstancedMesh resources
+    if (this.instancedMesh) {
+      this.scene.remove(this.instancedMesh);
+      this.instancedMesh.dispose();
+      this.instancedMesh = null;
+    }
+    if (this.sphereGeometry) {
+      this.sphereGeometry.dispose();
+      this.sphereGeometry = null;
+    }
+    if (this.instanceMaterial) {
+      this.instanceMaterial.dispose();
+      this.instanceMaterial = null;
     }
 
     // Dispose Three.js objects
@@ -105,10 +140,110 @@ export class Viewer {
   }
 
   /**
-   * Update the rendered earthquake points. (Stub — implemented in task 5.1)
+   * Update the rendered earthquake points using InstancedMesh for performance.
+   * Computes per-instance position, scale (magnitude + highlight), and color (age).
    */
-  updateVisibleEvents(_events: VisibleEvent[]): void {
-    // Stub: will be implemented in task 5.1
+  updateVisibleEvents(events: VisibleEvent[]): void {
+    // Store events for tooltip raycasting (instance index → earthquake event)
+    this.currentVisibleEvents = events.map((ve) => ve.event);
+
+    // Lazily create the InstancedMesh on first call
+    if (!this.instancedMesh) {
+      this.initInstancedMesh();
+    }
+
+    const mesh = this.instancedMesh!;
+    const magnitudeScale = createMagnitudeScale();
+
+    // Compute depth scale from visible events if not set yet
+    if (!this.depthScale || events.length > 0) {
+      this.depthScale = computeDepthScale(events.map((ve) => ve.event));
+    }
+
+    // Camera distance for screen-px to world-radius conversion
+    const cameraDistance = this.camera.position.length();
+    const fovRadians = THREE.MathUtils.degToRad(this.camera.fov);
+    const viewportHeight = this.renderer.domElement.clientHeight || 600;
+
+    const count = Math.min(events.length, Viewer.MAX_INSTANCES);
+    const dummy = new THREE.Object3D();
+
+    for (let i = 0; i < count; i++) {
+      const ve = events[i]!;
+      const ev = ve.event;
+
+      // Compute scene position from geo coordinates
+      const pos = geoToScene(
+        ev.latitude,
+        ev.longitude,
+        ev.depth,
+        this.config.bounds,
+        this.depthScale
+      );
+
+      // Compute world-space radius from magnitude
+      const screenPx = magnitudeScale.toRadius(ev.magnitude);
+      const worldRadius = screenPxToWorldRadius(
+        screenPx,
+        cameraDistance,
+        fovRadians,
+        viewportHeight
+      );
+
+      // Apply highlight scale pulse: if isNew, scale = 1.5 - 0.5 * highlightProgress
+      let scale = worldRadius;
+      if (ve.isNew) {
+        const highlightMultiplier = 1.5 - 0.5 * ve.highlightProgress;
+        scale *= highlightMultiplier;
+      }
+
+      // Set transform matrix
+      dummy.position.set(pos.x, pos.y, pos.z);
+      dummy.scale.set(scale, scale, scale);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+
+      // Set per-instance color from age
+      const threeColor = ageToThreeColor(ve.age);
+      mesh.setColorAt(i, threeColor);
+    }
+
+    // Update instance count and flag buffers for GPU upload
+    mesh.count = count;
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) {
+      mesh.instanceColor.needsUpdate = true;
+    }
+  }
+
+  /**
+   * Initialize the InstancedMesh for earthquake point rendering.
+   */
+  private initInstancedMesh(): void {
+    // SphereGeometry with unit radius (scaled per-instance)
+    this.sphereGeometry = new THREE.SphereGeometry(1, 16, 12);
+
+    // MeshStandardMaterial to interact with scene lighting
+    this.instanceMaterial = new THREE.MeshStandardMaterial({
+      roughness: 0.5,
+      metalness: 0.1,
+    });
+
+    this.instancedMesh = new THREE.InstancedMesh(
+      this.sphereGeometry,
+      this.instanceMaterial,
+      Viewer.MAX_INSTANCES
+    );
+    this.instancedMesh.count = 0; // Start with no visible instances
+    this.instancedMesh.name = 'earthquakePoints';
+
+    // Enable per-instance color
+    this.instancedMesh.instanceColor = new THREE.InstancedBufferAttribute(
+      new Float32Array(Viewer.MAX_INSTANCES * 3),
+      3
+    );
+
+    this.scene.add(this.instancedMesh);
   }
 
   /**
@@ -120,17 +255,51 @@ export class Viewer {
   }
 
   /**
-   * Display a tooltip for the given earthquake event at the screen position. (Stub — implemented in task 5.6)
+   * Display a tooltip for the given earthquake event at the screen position.
    */
-  showTooltip(_event: EarthquakeEvent, _screenPos: { x: number; y: number }): void {
-    // Stub: will be implemented in task 5.6
+  showTooltip(event: EarthquakeEvent, screenPos: { x: number; y: number }): void {
+    if (!this.tooltipEl) {
+      this.tooltipEl = document.createElement('div');
+      this.tooltipEl.className = 'earthquake-tooltip';
+      this.tooltipEl.style.position = 'absolute';
+      this.tooltipEl.style.pointerEvents = 'none';
+      this.tooltipEl.style.background = 'rgba(0, 0, 0, 0.85)';
+      this.tooltipEl.style.color = '#ffffff';
+      this.tooltipEl.style.padding = '8px 12px';
+      this.tooltipEl.style.borderRadius = '4px';
+      this.tooltipEl.style.fontSize = '13px';
+      this.tooltipEl.style.lineHeight = '1.4';
+      this.tooltipEl.style.whiteSpace = 'nowrap';
+      this.tooltipEl.style.zIndex = '1000';
+      this.config.container.appendChild(this.tooltipEl);
+    }
+
+    // Format tooltip content
+    const magnitude = event.magnitude.toFixed(1);
+    const depth = event.depth.toFixed(2);
+    const timestamp = event.timestamp.toISOString();
+
+    this.tooltipEl.innerHTML = `
+      <strong>Magnitude:</strong> ${magnitude}<br>
+      <strong>Depth:</strong> ${depth} km<br>
+      <strong>Time:</strong> ${timestamp}
+    `.trim();
+
+    // Position near the cursor with a small offset
+    const offsetX = 15;
+    const offsetY = 15;
+    this.tooltipEl.style.left = `${screenPos.x + offsetX}px`;
+    this.tooltipEl.style.top = `${screenPos.y + offsetY}px`;
+    this.tooltipEl.style.display = 'block';
   }
 
   /**
-   * Hide the tooltip. (Stub — implemented in task 5.6)
+   * Hide the tooltip.
    */
   hideTooltip(): void {
-    // Stub: will be implemented in task 5.6
+    if (this.tooltipEl) {
+      this.tooltipEl.style.display = 'none';
+    }
   }
 
   /**
@@ -389,6 +558,49 @@ export class Viewer {
       'webglcontextrestored',
       this.contextRestoredHandler
     );
+
+    // Pointermove for tooltip raycasting
+    this.pointerMoveHandler = (e: PointerEvent) => this.onPointerMove(e);
+    this.renderer.domElement.addEventListener(
+      'pointermove',
+      this.pointerMoveHandler
+    );
+  }
+
+  private onPointerMove(e: PointerEvent): void {
+    if (!this.instancedMesh || this.currentVisibleEvents.length === 0) {
+      this.hideTooltip();
+      return;
+    }
+
+    const canvas = this.renderer.domElement;
+    const rect = canvas.getBoundingClientRect();
+
+    // Convert pointer position to normalized device coordinates (-1 to +1)
+    this.pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    this.pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    // Perform raycasting
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+    const intersects = this.raycaster.intersectObject(this.instancedMesh);
+
+    if (intersects.length > 0) {
+      const hit = intersects[0]!;
+      const instanceId = hit.instanceId;
+
+      if (instanceId !== undefined && instanceId < this.currentVisibleEvents.length) {
+        const event = this.currentVisibleEvents[instanceId]!;
+        // Screen position relative to container
+        const screenPos = {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top,
+        };
+        this.showTooltip(event, screenPos);
+        return;
+      }
+    }
+
+    this.hideTooltip();
   }
 
   private onWindowResize(): void {

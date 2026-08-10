@@ -1,5 +1,22 @@
 {
-  "pbtResults": {},
+  "pbtResults": {
+    "4.3 Write property test for coordinate projection bijectivity": {
+      "status": "passed",
+      "lastRunTimestamp": 1786374936218
+    },
+    "2.5 Write property test for malformed record filtering": {
+      "status": "passed",
+      "lastRunTimestamp": 1786374944817
+    },
+    "2.4 Write property test for bounding box filter integrity": {
+      "status": "passed",
+      "lastRunTimestamp": 1786374947264
+    },
+    "2.3 Write property test for parsing round-trip consistency": {
+      "status": "passed",
+      "lastRunTimestamp": 1786375036103
+    }
+  },
   "executionHistory": {
     "1.1 Initialize Vite + TypeScript project with Three.js": [
       {
@@ -62,6 +79,11 @@
         "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
         "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
         "timestamp": 1786374618950
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786374832846
       }
     ],
     "2.3 Write property test for parsing round-trip consistency": [
@@ -69,6 +91,16 @@
         "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
         "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
         "timestamp": 1786364494102
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786374843027
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786375051063
       }
     ],
     "2.4 Write property test for bounding box filter integrity": [
@@ -76,6 +108,16 @@
         "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
         "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
         "timestamp": 1786364494168
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786374843871
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786375052045
       }
     ],
     "2.5 Write property test for malformed record filtering": [
@@ -83,6 +125,16 @@
         "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
         "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
         "timestamp": 1786364494222
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786374844703
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786375052894
       }
     ],
     "3. Checkpoint - Data Fetcher complete": [
@@ -119,6 +171,11 @@
         "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
         "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
         "timestamp": 1786374619783
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786374833763
       }
     ],
     "4.3 Write property test for coordinate projection bijectivity": [
@@ -126,6 +183,16 @@
         "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
         "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
         "timestamp": 1786364494451
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786374845495
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786375053651
       }
     ],
     "5.1 Implement InstancedMesh-based point rendering": [
@@ -133,6 +200,11 @@
         "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
         "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
         "timestamp": 1786364494499
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786375162639
       }
     ],
     "5.2 Implement magnitude scaling": [
@@ -140,6 +212,16 @@
         "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
         "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
         "timestamp": 1786364494540
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786374846333
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786375054517
       }
     ],
     "5.3 Write property test for magnitude-to-radius monotonicity": [
@@ -154,6 +236,16 @@
         "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
         "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
         "timestamp": 1786364494630
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786375063020
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786375157318
       }
     ],
     "5.5 Write property test for temporal color age ordering": [
@@ -168,6 +260,11 @@
         "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
         "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
         "timestamp": 1786364494746
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786375163421
       }
     ],
     "6. Checkpoint - 3D Viewer rendering complete": [
@@ -182,6 +279,11 @@
         "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
         "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
         "timestamp": 1786364494854
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786375164315
       }
     ],
     "7.2 Write property test for chronological visibility order": [
@@ -210,6 +312,11 @@
         "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
         "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
         "timestamp": 1786364495055
+      },
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786375165057
       }
     ],
     "9.1 Implement time slider and playback controls": [
@@ -266,6 +373,20 @@
         "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
         "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
         "timestamp": 1786374288828
+      }
+    ],
+    "2. Data Fetcher implementation": [
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786375052966
+      }
+    ],
+    "4. 3D Viewer and scene setup": [
+      {
+        "executionId": "19e39e57-029f-49fb-859d-8238c4e3fa2b",
+        "chatSessionId": "sess_64436929-5154-459e-8cda-169b90e2565a",
+        "timestamp": 1786375053700
       }
     ]
   }
