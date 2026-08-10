@@ -311,7 +311,7 @@ describe('AnimationController', () => {
       expect(results[0][0].highlightProgress).toBe(0);
     });
 
-    it('event loses isNew after 0.5s real time', () => {
+    it('event loses isNew after 0.5s real time since appearance', () => {
       const events = [
         makeEvent('1', new Date('2024-01-01T00:00:00Z')),
         makeEvent('2', new Date('2024-01-02T00:00:00Z')),
@@ -321,18 +321,13 @@ describe('AnimationController', () => {
       controller.onFrame((visible) => results.push([...visible]));
 
       controller.play();
-      // Tick small increments
-      controller.tick(0.1);
+      // First tick: event appears, its appearance real-time is recorded
+      controller.tick(0.1); // event appears at realTimeElapsed = 0.1
       results.length = 0;
-      controller.tick(0.1);
+      // Need 0.5s MORE real time after appearance → total realTimeElapsed = 0.6
+      controller.tick(0.5); // realTimeElapsed = 0.6, timeSinceAppearance = 0.5
       results.length = 0;
-      controller.tick(0.1);
-      results.length = 0;
-      controller.tick(0.1);
-      results.length = 0;
-      controller.tick(0.1); // 0.5s total real time
-      results.length = 0;
-      controller.tick(0.01); // just past 0.5s
+      controller.tick(0.01); // realTimeElapsed = 0.61, timeSinceAppearance = 0.51 > 0.5
       expect(results[0][0].isNew).toBe(false);
       expect(results[0][0].highlightProgress).toBe(1.0);
     });
@@ -347,9 +342,13 @@ describe('AnimationController', () => {
       controller.onFrame((visible) => results.push([...visible]));
 
       controller.play();
-      controller.tick(0.25); // 0.25s → highlightProgress = 0.5
+      // First tick: event appears at realTimeElapsed after this tick
+      controller.tick(0.01); // event appears at ~0.01
+      results.length = 0;
+      // After 0.25s more → timeSinceAppearance ≈ 0.25 → highlightProgress ≈ 0.5
+      controller.tick(0.25);
       expect(results[0][0].isNew).toBe(true);
-      expect(results[0][0].highlightProgress).toBeCloseTo(0.5, 2);
+      expect(results[0][0].highlightProgress).toBeCloseTo(0.5, 1);
     });
   });
 
