@@ -65,7 +65,9 @@ export class Viewer {
     this.initCamera();
     this.initScene();
     this.initLights();
+    this.initSurfacePlanes();
     this.initCoastline();
+    this.initTownLabels();
     this.initDepthAxis();
     this.initEventListeners();
     this.startRenderLoop();
@@ -377,6 +379,83 @@ export class Viewer {
     this.scene.add(directionalLight);
   }
 
+  private initSurfacePlanes(): void {
+    const surfaceDepthScale: DepthScale = {
+      minDepth: 0,
+      maxDepth: 2,
+      sceneMinY: -4,
+      sceneMaxY: 0,
+      toSceneY: (_d: number) => 0,
+    };
+
+    // Get bounds corners in scene coordinates
+    const nw = geoToScene(this.config.bounds.maxLat, this.config.bounds.minLon, 0, this.config.bounds, surfaceDepthScale);
+    const ne = geoToScene(this.config.bounds.maxLat, this.config.bounds.maxLon, 0, this.config.bounds, surfaceDepthScale);
+    const se = geoToScene(this.config.bounds.minLat, this.config.bounds.maxLon, 0, this.config.bounds, surfaceDepthScale);
+    const sw = geoToScene(this.config.bounds.minLat, this.config.bounds.minLon, 0, this.config.bounds, surfaceDepthScale);
+
+    // Water plane (covers entire bounds)
+    const waterShape = new THREE.Shape();
+    waterShape.moveTo(nw.x, nw.z);
+    waterShape.lineTo(ne.x, ne.z);
+    waterShape.lineTo(se.x, se.z);
+    waterShape.lineTo(sw.x, sw.z);
+    waterShape.closePath();
+
+    const waterGeometry = new THREE.ShapeGeometry(waterShape);
+    const waterMaterial = new THREE.MeshBasicMaterial({
+      color: 0x1a3a5c,
+      transparent: true,
+      opacity: 0.4,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const waterMesh = new THREE.Mesh(waterGeometry, waterMaterial);
+    waterMesh.rotation.x = -Math.PI / 2;
+    waterMesh.position.y = -0.01;
+    waterMesh.name = 'waterPlane';
+    this.scene.add(waterMesh);
+
+    // Land shape (north of coastline)
+    const mainCoast = COASTLINE_POLYLINES[0];
+    const coastScenePoints = mainCoast.map(([lat, lon]) => {
+      const p = geoToScene(lat, lon, 0, this.config.bounds, surfaceDepthScale);
+      return { x: p.x, z: p.z };
+    });
+
+    // Build land polygon: westernmost coast point → NW corner → NE corner → easternmost coast point → follow coast back
+    const landShape = new THREE.Shape();
+    const firstCoast = coastScenePoints[0];
+    const lastCoast = coastScenePoints[coastScenePoints.length - 1];
+
+    landShape.moveTo(firstCoast.x, firstCoast.z);
+    // Up to northwest corner (same x as first coast point, max z)
+    landShape.lineTo(nw.x, nw.z);
+    // Along top to northeast
+    landShape.lineTo(ne.x, ne.z);
+    // Down to last coast point
+    landShape.lineTo(lastCoast.x, lastCoast.z);
+    // Follow coastline from east to west (reverse order)
+    for (let i = coastScenePoints.length - 1; i >= 0; i--) {
+      landShape.lineTo(coastScenePoints[i].x, coastScenePoints[i].z);
+    }
+    landShape.closePath();
+
+    const landGeometry = new THREE.ShapeGeometry(landShape);
+    const landMaterial = new THREE.MeshBasicMaterial({
+      color: 0x2d5a3a,
+      transparent: true,
+      opacity: 0.35,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const landMesh = new THREE.Mesh(landGeometry, landMaterial);
+    landMesh.rotation.x = -Math.PI / 2;
+    landMesh.position.y = 0.005;
+    landMesh.name = 'landPlane';
+    this.scene.add(landMesh);
+  }
+
   private initCoastline(): void {
     // Use a surface depth scale (coastline is at the surface)
     const surfaceDepthScale: DepthScale = {
@@ -404,6 +483,73 @@ export class Viewer {
       line.name = 'coastline';
       this.scene.add(line);
     }
+  }
+
+  private initTownLabels(): void {
+    const surfaceDepthScale: DepthScale = {
+      minDepth: 0,
+      maxDepth: 2,
+      sceneMinY: -4,
+      sceneMaxY: 0,
+      toSceneY: (_d: number) => 0,
+    };
+
+    const towns: { name: string; lat: number; lon: number }[] = [
+      { name: 'Pozzuoli', lat: 40.822, lon: 14.122 },
+      { name: 'Bacoli', lat: 40.800, lon: 14.070 },
+      { name: 'Baia', lat: 40.813, lon: 14.075 },
+      { name: 'Quarto', lat: 40.876, lon: 14.145 },
+      { name: 'Monte di Procida', lat: 40.798, lon: 14.050 },
+      { name: 'Bagnoli', lat: 40.808, lon: 14.168 },
+      { name: 'Solfatara', lat: 40.828, lon: 14.139 },
+    ];
+
+    const dotGeometry = new THREE.SphereGeometry(0.12, 8, 6);
+    const dotMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+    for (const town of towns) {
+      const pos = geoToScene(town.lat, town.lon, 0, this.config.bounds, surfaceDepthScale);
+
+      // Small white dot
+      const dot = new THREE.Mesh(dotGeometry, dotMaterial);
+      dot.position.set(pos.x, 0.05, pos.z);
+      dot.name = `town-dot-${town.name}`;
+      this.scene.add(dot);
+
+      // Text label above the dot
+      const label = this.createTownLabel(town.name);
+      label.position.set(pos.x, 0.6, pos.z);
+      label.name = `town-label-${town.name}`;
+      this.scene.add(label);
+    }
+  }
+
+  private createTownLabel(text: string): THREE.Sprite {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = '20px Arial';
+      ctx.fillStyle = '#e0e0e0';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+
+    const material = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+    });
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(3, 0.75, 1);
+    return sprite;
   }
 
   private initDepthAxis(): void {
