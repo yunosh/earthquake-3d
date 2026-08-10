@@ -1,12 +1,8 @@
-import { DepthScale, EarthquakeEvent, GeoBounds, ScenePosition } from './types';
+import { DepthScale, EarthquakeEvent, ScenePosition } from './types';
 
 /** Center of the Campi Flegrei caldera */
 export const CALDERA_CENTER_LAT = 40.827;
 export const CALDERA_CENTER_LON = 14.139;
-
-/** Conversion factors at Campi Flegrei latitude */
-const KM_PER_DEGREE_LAT = 111; // 1° latitude ≈ 111 km
-const KM_PER_DEGREE_LON = 85;  // 1° longitude ≈ 85 km at ~40.8°N
 
 /**
  * Horizontal scale: 1 scene unit = 100m = 0.1km
@@ -24,18 +20,48 @@ const DEPTH_SCALE_FACTOR = 2;
 const MIN_AXIS_DEPTH_KM = 2;
 
 /**
+ * Configuration for the coordinate mapper, parameterized by region center.
+ */
+export interface CoordinateMapperConfig {
+  centerLat: number;
+  centerLon: number;
+  kmPerDegreeLat: number;   // ~111 (constant)
+  kmPerDegreeLon: number;   // 111 * cos(centerLat)
+}
+
+/**
+ * Create a CoordinateMapperConfig for a given region center.
+ *
+ * @param centerLat - Center latitude in degrees
+ * @param centerLon - Center longitude in degrees
+ * @returns CoordinateMapperConfig with computed km-per-degree factors
+ */
+export function createCoordinateMapperConfig(
+  centerLat: number,
+  centerLon: number
+): CoordinateMapperConfig {
+  const latRad = (centerLat * Math.PI) / 180;
+  return {
+    centerLat,
+    centerLon,
+    kmPerDegreeLat: 111,
+    kmPerDegreeLon: 111 * Math.cos(latRad),
+  };
+}
+
+/**
  * Convert geographic coordinates to 3D scene position.
  *
  * - Latitude → Z (north = positive Z)
  * - Longitude → X (east = positive X)
  * - Depth → Y (deeper = more negative Y)
  *
- * Centered on the Campi Flegrei caldera center (40.827°N, 14.139°E).
+ * Centered on the region center defined in config.
  *
  * @param lat - Latitude in degrees
  * @param lon - Longitude in degrees
  * @param depth - Depth in km below surface (positive value)
- * @param _bounds - Geographic bounds (reserved for future use)
+ * @param config - Coordinate mapper configuration with center and scale factors
  * @param depthScale - The depth scaling configuration
  * @returns Scene position with x, y, z coordinates
  */
@@ -43,15 +69,15 @@ export function geoToScene(
   lat: number,
   lon: number,
   depth: number,
-  _bounds: GeoBounds,
+  config: CoordinateMapperConfig,
   depthScale: DepthScale
 ): ScenePosition {
-  // Horizontal mapping: offset from caldera center, convert to km, then to scene units
-  const deltaLat = lat - CALDERA_CENTER_LAT;
-  const deltaLon = lon - CALDERA_CENTER_LON;
+  // Horizontal mapping: offset from region center, convert to km, then to scene units
+  const deltaLat = lat - config.centerLat;
+  const deltaLon = lon - config.centerLon;
 
-  const x = deltaLon * KM_PER_DEGREE_LON * HORIZONTAL_SCALE;
-  const z = deltaLat * KM_PER_DEGREE_LAT * HORIZONTAL_SCALE;
+  const x = deltaLon * config.kmPerDegreeLon * HORIZONTAL_SCALE;
+  const z = deltaLat * config.kmPerDegreeLat * HORIZONTAL_SCALE;
 
   // Vertical mapping: use depth scale's toSceneY for consistent depth rendering
   const y = depthScale.toSceneY(depth);

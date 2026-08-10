@@ -1,7 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
-import { geoToScene, computeDepthScale } from '../../coordinate-mapper';
-import { EarthquakeEvent, GeoBounds } from '../../types';
+import {
+  geoToScene,
+  computeDepthScale,
+  createCoordinateMapperConfig,
+  CALDERA_CENTER_LAT,
+  CALDERA_CENTER_LON,
+} from '../../coordinate-mapper';
+import { EarthquakeEvent } from '../../types';
 
 /**
  * Property 9: Coordinate Projection Bijectivity and Ordering
@@ -11,12 +17,7 @@ import { EarthquakeEvent, GeoBounds } from '../../types';
  * Validates: Requirements 2.1
  */
 
-const BOUNDS: GeoBounds = {
-  minLat: 40.78,
-  maxLat: 40.90,
-  minLon: 14.03,
-  maxLon: 14.22,
-};
+const CAMPI_FLEGREI_CONFIG = createCoordinateMapperConfig(CALDERA_CENTER_LAT, CALDERA_CENTER_LON);
 
 /** Arbitrary latitude within bounding box */
 const arbLat = fc.double({ min: 40.78, max: 40.90, noNaN: true });
@@ -58,8 +59,8 @@ describe('Property 9: Coordinate Projection Bijectivity and Ordering', () => {
           // Only test when inputs are actually distinct
           if (lat1 === lat2 && lon1 === lon2 && depth1 === depth2) return;
 
-          const pos1 = geoToScene(lat1, lon1, depth1, BOUNDS, depthScale);
-          const pos2 = geoToScene(lat2, lon2, depth2, BOUNDS, depthScale);
+          const pos1 = geoToScene(lat1, lon1, depth1, CAMPI_FLEGREI_CONFIG, depthScale);
+          const pos2 = geoToScene(lat2, lon2, depth2, CAMPI_FLEGREI_CONFIG, depthScale);
 
           // At least one coordinate must differ
           const isDistinct =
@@ -82,8 +83,8 @@ describe('Property 9: Coordinate Projection Bijectivity and Ordering', () => {
           // Only test when lonA is strictly greater
           fc.pre(lonA > lonB);
 
-          const posA = geoToScene(lat, lonA, depth, BOUNDS, depthScale);
-          const posB = geoToScene(lat, lonB, depth, BOUNDS, depthScale);
+          const posA = geoToScene(lat, lonA, depth, CAMPI_FLEGREI_CONFIG, depthScale);
+          const posB = geoToScene(lat, lonB, depth, CAMPI_FLEGREI_CONFIG, depthScale);
 
           expect(posA.x).toBeGreaterThan(posB.x);
         }
@@ -103,8 +104,8 @@ describe('Property 9: Coordinate Projection Bijectivity and Ordering', () => {
           // Only test when latA is strictly greater
           fc.pre(latA > latB);
 
-          const posA = geoToScene(latA, lon, depth, BOUNDS, depthScale);
-          const posB = geoToScene(latB, lon, depth, BOUNDS, depthScale);
+          const posA = geoToScene(latA, lon, depth, CAMPI_FLEGREI_CONFIG, depthScale);
+          const posB = geoToScene(latB, lon, depth, CAMPI_FLEGREI_CONFIG, depthScale);
 
           expect(posA.z).toBeGreaterThan(posB.z);
         }
@@ -124,8 +125,8 @@ describe('Property 9: Coordinate Projection Bijectivity and Ordering', () => {
           // Only test when depthA is strictly greater
           fc.pre(depthA > depthB);
 
-          const posA = geoToScene(lat, lon, depthA, BOUNDS, depthScale);
-          const posB = geoToScene(lat, lon, depthB, BOUNDS, depthScale);
+          const posA = geoToScene(lat, lon, depthA, CAMPI_FLEGREI_CONFIG, depthScale);
+          const posB = geoToScene(lat, lon, depthB, CAMPI_FLEGREI_CONFIG, depthScale);
 
           expect(posA.y).toBeLessThan(posB.y);
         }

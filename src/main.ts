@@ -5,20 +5,15 @@ import { Viewer } from './viewer';
 import { AnimationController } from './animation-controller';
 import { RotationEngine } from './rotation-engine';
 import { TimeSlider } from './ui/time-slider';
-import { computeDepthScale } from './coordinate-mapper';
-import type { GeoBounds, VisibleEvent, FetchResult } from './types';
+import { RegionSwitcher } from './ui/region-switcher';
+import { computeDepthScale, createCoordinateMapperConfig } from './coordinate-mapper';
+import { registerRegion, getRegion, getAllRegions, getDefaultRegionId } from './region-registry';
+import { campiFlegrei } from './regions/campi-flegrei';
+import { canaryIslands } from './regions/canary-islands';
+import type { RegionConfig } from './region-config';
+import type { VisibleEvent, FetchResult } from './types';
 
 // --- Constants ---
-
-const CALDERA_CENTER_LAT = 40.827;
-const CALDERA_CENTER_LON = 14.139;
-
-const BOUNDS: GeoBounds = {
-  minLat: 40.78,
-  maxLat: 40.90,
-  minLon: 14.03,
-  maxLon: 14.22,
-};
 
 const DEFAULT_ANIMATION_DURATION_SEC = 20; // 20s full playback at 1x speed
 const DEFAULT_SPEED_MULTIPLIER = 1;
@@ -59,7 +54,15 @@ async function main(): Promise<void> {
     return;
   }
 
-  // 2. Create UI containers
+  // 2. Register all regions
+  registerRegion(campiFlegrei);
+  registerRegion(canaryIslands);
+
+  // 3. Load default region
+  const defaultRegionId = getDefaultRegionId();
+  let activeRegion: RegionConfig = getRegion(defaultRegionId) ?? campiFlegrei;
+
+  // 4. Create UI containers
   const viewerContainer = document.createElement('div');
   viewerContainer.id = 'viewer-container';
   appContainer.appendChild(viewerContainer);
@@ -68,32 +71,42 @@ async function main(): Promise<void> {
   uiContainer.id = 'ui-container';
   appContainer.appendChild(uiContainer);
 
-  // 3. Initialize core modules
-  const dataFetcher = new DataFetcher();
+  // 5. Initialize core modules with active region values
+  const dataFetcher = new DataFetcher({
+    endpoint: activeRegion.apiEndpoint,
+    bounds: activeRegion.bounds,
+  });
+
+  let mapperConfig = createCoordinateMapperConfig(activeRegion.center.lat, activeRegion.center.lon);
 
   const viewer = new Viewer({
     container: viewerContainer,
-    centerLat: CALDERA_CENTER_LAT,
-    centerLon: CALDERA_CENTER_LON,
-    bounds: BOUNDS,
+    centerLat: activeRegion.center.lat,
+    centerLon: activeRegion.center.lon,
+    bounds: activeRegion.bounds,
   });
   viewer.init();
+
+  // 6. Create RegionSwitcher in UI container
+  const allRegions = getAllRegions();
+  const regionSwitcher = new RegionSwitcher(uiContainer, allRegions.map(r => ({ id: r.id, title: r.title })));
+  regionSwitcher.setActive(activeRegion.id);
 
   const timeSlider = new TimeSlider({
     container: uiContainer,
     minDate: new Date('2000-01-01T00:00:00Z'),
     maxDate: new Date(),
-    defaultRange: 30,
+    defaultRange: activeRegion.defaultTimeRangeDays,
   });
 
-  // 4. Set up OrbitControls on the Viewer's camera/renderer
+  // 7. Set up OrbitControls on the Viewer's camera/renderer
   const controls = new OrbitControls(viewer.getCamera(), viewer.getRenderer().domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
-  controls.target.set(0, -2, 0); // Look slightly below surface (caldera center depth area)
+  controls.target.set(0, -2, 0); // Look slightly below surface (center depth area)
   controls.update();
 
-  // 5. Set up RotationEngine
+  // 8. Set up RotationEngine
   const rotationEngine = new RotationEngine(
     {
       degreesPerSecond: 10,
@@ -103,7 +116,7 @@ async function main(): Promise<void> {
     controls
   );
 
-  // 6. Wire Viewer interaction events → RotationEngine
+  // 9. Wire Viewer interaction events → RotationEngine
   viewer.onInteractionStart(() => rotationEngine.onInteractionStart());
   viewer.onInteractionEnd(() => rotationEngine.onInteractionEnd());
 
@@ -111,7 +124,7 @@ async function main(): Promise<void> {
   controls.addEventListener('start', () => rotationEngine.onInteractionStart());
   controls.addEventListener('end', () => rotationEngine.onInteractionEnd());
 
-  // 7. WebGL context lost/restored handling — notify user via TimeSlider
+  // 10. WebGL context lost/restored handling — notify user via TimeSlider
   let webglRecoveryTimeout: ReturnType<typeof setTimeout> | null = null;
 
   const canvas = viewer.getCanvas();
@@ -140,7 +153,7 @@ async function main(): Promise<void> {
     timeSlider.showInfo('Rendering wiederhergestellt.');
   });
 
-  // 8. AnimationController (initialized after data fetch)
+  // 11. AnimationController (initialized after data fetch)
   let animationController: AnimationController | null = null;
 
   // Frame callback: update Viewer and TimeSlider on each animation frame
@@ -158,7 +171,6 @@ async function main(): Promise<void> {
 
   /**
    * Process a FetchResult and display appropriate messages.
-   * Returns true if the result contains usable data (new or retained from previous fetch).
    */
   function handleFetchResult(result: FetchResult): void {
     if (result.failed) {
@@ -179,34 +191,82 @@ async function main(): Promise<void> {
     }
   }
 
-  // 9. Fetch initial data (last 7 days)
-  timeSlider.setLoading(true);
-  try {
-    const result = await dataFetcher.fetch();
+  /**
+   * Fetch data and set up AnimationController for the current region/time range.
+   */
+  async function fetchAndSetupAnimation(): Promise<void> {
+    timeSlider.setLoading(true);
+    try {
+      const result = await dataFetcher.fetch();
 
-    handleFetchResult(result);
+      handleFetchResult(result);
 
-    if (result.events.length > 0) {
-      // Compute and apply depth scale
-      const depthScale = computeDepthScale(result.events);
-      viewer.setDepthScale(depthScale.minDepth, depthScale.maxDepth);
+      if (result.events.length > 0) {
+        // Compute and apply depth scale
+        const depthScale = computeDepthScale(result.events);
+        viewer.setDepthScale(depthScale.minDepth, depthScale.maxDepth);
+      }
+
+      // Create AnimationController with fetched events
+      animationController = new AnimationController({
+        events: result.events,
+        defaultDurationSec: DEFAULT_ANIMATION_DURATION_SEC,
+        speedMultiplier: DEFAULT_SPEED_MULTIPLIER,
+      });
+      animationController.onFrame(onAnimationFrame);
+    } catch (error) {
+      timeSlider.showError('Daten konnten nicht geladen werden. Bitte versuchen Sie es später erneut.');
+      console.error('[main] Data fetch failed:', error);
+    } finally {
+      timeSlider.setLoading(false);
     }
-
-    // Create AnimationController with fetched events (may be empty or retained from previous)
-    animationController = new AnimationController({
-      events: result.events,
-      defaultDurationSec: DEFAULT_ANIMATION_DURATION_SEC,
-      speedMultiplier: DEFAULT_SPEED_MULTIPLIER,
-    });
-    animationController.onFrame(onAnimationFrame);
-  } catch (error) {
-    timeSlider.showError('Daten konnten nicht geladen werden. Bitte versuchen Sie es später erneut.');
-    console.error('[main] Initial data fetch failed:', error);
-  } finally {
-    timeSlider.setLoading(false);
   }
 
-  // 10. Wire TimeSlider callbacks
+  // 12. Wire RegionSwitcher onChange → full region switch flow
+  regionSwitcher.onChange(async (regionId: string) => {
+    const newRegion = getRegion(regionId);
+    if (!newRegion) {
+      console.error(`[main] Unknown region: ${regionId}`);
+      return;
+    }
+
+    // Disable switcher during transition
+    regionSwitcher.setDisabled(true);
+
+    // Abort any in-flight requests
+    dataFetcher.abort();
+
+    // Reset AnimationController
+    if (animationController) {
+      animationController.reset();
+      animationController = null;
+    }
+    viewer.updateVisibleEvents([]);
+    timeSlider.setProgress(0);
+
+    // Update active region
+    activeRegion = newRegion;
+
+    // Create new CoordinateMapperConfig for the new region
+    mapperConfig = createCoordinateMapperConfig(activeRegion.center.lat, activeRegion.center.lon);
+
+    // Setup Viewer with new region (clears old elements, rebuilds scene)
+    viewer.setupRegion(activeRegion, mapperConfig);
+
+    // Reconfigure DataFetcher with new endpoint and bounds
+    dataFetcher.configure(activeRegion.apiEndpoint, activeRegion.bounds);
+
+    // Fetch new data for the region
+    await fetchAndSetupAnimation();
+
+    // Re-enable switcher
+    regionSwitcher.setDisabled(false);
+  });
+
+  // 13. Fetch initial data for the default region
+  await fetchAndSetupAnimation();
+
+  // 14. Wire TimeSlider callbacks
 
   // onRangeChange → fetch new data → recreate AnimationController
   timeSlider.onRangeChange(async (start: Date, end: Date) => {
@@ -273,7 +333,7 @@ async function main(): Promise<void> {
     timeSlider.setVirtualTime(new Date(0));
   });
 
-  // 11. Animation loop with requestAnimationFrame
+  // 15. Animation loop with requestAnimationFrame
   let lastTimestamp: number | null = null;
 
   function animationLoop(timestamp: number): void {

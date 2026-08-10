@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { EarthquakeEvent, GeoBounds, VisibleEvent, DepthScale } from './types';
-import { geoToScene, computeDepthScale } from './coordinate-mapper';
+import { geoToScene, computeDepthScale, CoordinateMapperConfig, createCoordinateMapperConfig } from './coordinate-mapper';
 import { createMagnitudeScale } from './magnitude-scale';
 import { ageToThreeColor } from './color-mapper';
 import { COASTLINE_POLYLINES } from './coastline-data';
+import type { RegionConfig } from './region-config';
 
 export interface ViewerConfig {
   container: HTMLElement;
@@ -18,6 +19,7 @@ export interface ViewerConfig {
  */
 export class Viewer {
   private config: ViewerConfig;
+  private mapperConfig: CoordinateMapperConfig;
   private renderer!: THREE.WebGLRenderer;
   private camera!: THREE.PerspectiveCamera;
   private scene!: THREE.Scene;
@@ -54,6 +56,7 @@ export class Viewer {
 
   constructor(config: ViewerConfig) {
     this.config = config;
+    this.mapperConfig = createCoordinateMapperConfig(config.centerLat, config.centerLon);
   }
 
   /**
@@ -191,7 +194,7 @@ export class Viewer {
         ev.latitude,
         ev.longitude,
         ev.depth,
-        this.config.bounds,
+        this.mapperConfig,
         this.depthScale
       );
 
@@ -357,7 +360,76 @@ export class Viewer {
     return this.renderer;
   }
 
+  /**
+   * Remove all region-specific scene elements (coastlines, towns, surface planes,
+   * earthquake points). Disposes geometry and material resources.
+   */
+  clearRegionElements(): void {
+    const toRemove = this.scene.children.filter(
+      (c) =>
+        c.name.startsWith('coastline') ||
+        c.name.startsWith('town-') ||
+        c.name === 'waterPlane' ||
+        c.name === 'landPlane'
+    );
+
+    for (const child of toRemove) {
+      this.scene.remove(child);
+      if (child instanceof THREE.Mesh || child instanceof THREE.Line) {
+        child.geometry?.dispose();
+        if (Array.isArray(child.material)) {
+          child.material.forEach((m) => m.dispose());
+        } else {
+          child.material?.dispose();
+        }
+      }
+      if (child instanceof THREE.Sprite) {
+        child.material?.map?.dispose();
+        child.material?.dispose();
+      }
+    }
+
+    // Remove and dispose instanced mesh for earthquake points
+    if (this.instancedMesh) {
+      this.scene.remove(this.instancedMesh);
+      this.instancedMesh.dispose();
+      this.instancedMesh = null;
+    }
+    if (this.sphereGeometry) {
+      this.sphereGeometry.dispose();
+      this.sphereGeometry = null;
+    }
+    if (this.instanceMaterial) {
+      this.instanceMaterial.dispose();
+      this.instanceMaterial = null;
+    }
+    this.instancePositions = [];
+    this.currentVisibleEvents = [];
+  }
+
+  /**
+   * Render region-specific scene elements from a RegionConfig.
+   * Clears existing region elements, updates bounds/center/mapper, and rebuilds
+   * surface planes, coastline, towns, and camera position.
+   */
+  setupRegion(config: RegionConfig, mapperConfig: CoordinateMapperConfig): void {
+    this.clearRegionElements();
+    this.config.bounds = config.bounds;
+    this.config.centerLat = config.center.lat;
+    this.config.centerLon = config.center.lon;
+    this.mapperConfig = mapperConfig;
+    this.initSurfacePlanes();
+    this.initCoastlineFrom(config.coastlinePolylines);
+    this.initTownLabelsFrom(config.towns);
+    this.resetCamera(config.cameraDistance);
+  }
+
   // --- Private methods ---
+
+  private resetCamera(distance: number): void {
+    this.camera.position.set(distance * 0.33, distance * 0.53, distance * 0.8);
+    this.camera.lookAt(0, -2, 0);
+  }
 
   private initRenderer(): void {
     this.renderer = new THREE.WebGLRenderer({
@@ -408,10 +480,10 @@ export class Viewer {
     };
 
     // Get bounds corners in scene coordinates
-    const nw = geoToScene(this.config.bounds.maxLat, this.config.bounds.minLon, 0, this.config.bounds, surfaceDepthScale);
-    const ne = geoToScene(this.config.bounds.maxLat, this.config.bounds.maxLon, 0, this.config.bounds, surfaceDepthScale);
-    const se = geoToScene(this.config.bounds.minLat, this.config.bounds.maxLon, 0, this.config.bounds, surfaceDepthScale);
-    const sw = geoToScene(this.config.bounds.minLat, this.config.bounds.minLon, 0, this.config.bounds, surfaceDepthScale);
+    const nw = geoToScene(this.config.bounds.maxLat, this.config.bounds.minLon, 0, this.mapperConfig, surfaceDepthScale);
+    const ne = geoToScene(this.config.bounds.maxLat, this.config.bounds.maxLon, 0, this.mapperConfig, surfaceDepthScale);
+    const se = geoToScene(this.config.bounds.minLat, this.config.bounds.maxLon, 0, this.mapperConfig, surfaceDepthScale);
+    const sw = geoToScene(this.config.bounds.minLat, this.config.bounds.minLon, 0, this.mapperConfig, surfaceDepthScale);
 
     // Water plane (covers entire bounds)
     const waterShape = new THREE.Shape();
@@ -438,7 +510,7 @@ export class Viewer {
     // Land shape (north of coastline)
     const mainCoast = COASTLINE_POLYLINES[0];
     const coastScenePoints = mainCoast.map(([lat, lon]) => {
-      const p = geoToScene(lat, lon, 0, this.config.bounds, surfaceDepthScale);
+      const p = geoToScene(lat, lon, 0, this.mapperConfig, surfaceDepthScale);
       return { x: p.x, z: p.z };
     });
 
@@ -476,6 +548,10 @@ export class Viewer {
   }
 
   private initCoastline(): void {
+    this.initCoastlineFrom(COASTLINE_POLYLINES);
+  }
+
+  private initCoastlineFrom(polylines: [number, number][][]): void {
     // Use a surface depth scale (coastline is at the surface)
     const surfaceDepthScale: DepthScale = {
       minDepth: 0,
@@ -491,10 +567,10 @@ export class Viewer {
       opacity: 0.6,
     });
 
-    for (const polyline of COASTLINE_POLYLINES) {
+    for (const polyline of polylines) {
       const points: THREE.Vector3[] = [];
       for (const [lat, lon] of polyline) {
-        const pos = geoToScene(lat, lon, 0, this.config.bounds, surfaceDepthScale);
+        const pos = geoToScene(lat, lon, 0, this.mapperConfig, surfaceDepthScale);
         points.push(new THREE.Vector3(pos.x, 0.01, pos.z)); // slightly above reference plane
       }
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
@@ -505,14 +581,6 @@ export class Viewer {
   }
 
   private initTownLabels(): void {
-    const surfaceDepthScale: DepthScale = {
-      minDepth: 0,
-      maxDepth: 2,
-      sceneMinY: -4,
-      sceneMaxY: 0,
-      toSceneY: (_d: number) => 0,
-    };
-
     const towns: { name: string; lat: number; lon: number }[] = [
       { name: 'Pozzuoli', lat: 40.822, lon: 14.122 },
       { name: 'Bacoli', lat: 40.800, lon: 14.070 },
@@ -523,11 +591,23 @@ export class Viewer {
       { name: 'Solfatara', lat: 40.828, lon: 14.139 },
     ];
 
+    this.initTownLabelsFrom(towns);
+  }
+
+  private initTownLabelsFrom(towns: { name: string; lat: number; lon: number }[]): void {
+    const surfaceDepthScale: DepthScale = {
+      minDepth: 0,
+      maxDepth: 2,
+      sceneMinY: -4,
+      sceneMaxY: 0,
+      toSceneY: (_d: number) => 0,
+    };
+
     const dotGeometry = new THREE.SphereGeometry(0.12, 8, 6);
     const dotMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
     for (const town of towns) {
-      const pos = geoToScene(town.lat, town.lon, 0, this.config.bounds, surfaceDepthScale);
+      const pos = geoToScene(town.lat, town.lon, 0, this.mapperConfig, surfaceDepthScale);
 
       // Small white dot
       const dot = new THREE.Mesh(dotGeometry, dotMaterial);

@@ -2,17 +2,13 @@ import { describe, it, expect } from 'vitest';
 import {
   geoToScene,
   computeDepthScale,
+  createCoordinateMapperConfig,
   CALDERA_CENTER_LAT,
   CALDERA_CENTER_LON,
 } from '../coordinate-mapper';
-import { EarthquakeEvent, GeoBounds } from '../types';
+import { EarthquakeEvent } from '../types';
 
-const DEFAULT_BOUNDS: GeoBounds = {
-  minLat: 40.78,
-  maxLat: 40.90,
-  minLon: 14.03,
-  maxLon: 14.22,
-};
+const CAMPI_FLEGREI_CONFIG = createCoordinateMapperConfig(CALDERA_CENTER_LAT, CALDERA_CENTER_LON);
 
 function makeEvent(overrides: Partial<EarthquakeEvent> = {}): EarthquakeEvent {
   return {
@@ -35,7 +31,7 @@ describe('geoToScene', () => {
       CALDERA_CENTER_LAT,
       CALDERA_CENTER_LON,
       0,
-      DEFAULT_BOUNDS,
+      CAMPI_FLEGREI_CONFIG,
       depthScale
     );
     expect(pos.x).toBeCloseTo(0, 5);
@@ -49,7 +45,7 @@ describe('geoToScene', () => {
       CALDERA_CENTER_LAT,
       CALDERA_CENTER_LON,
       5,
-      DEFAULT_BOUNDS,
+      CAMPI_FLEGREI_CONFIG,
       depthScale
     );
     expect(pos.y).toBe(-10); // 5km * 2 = -10 scene units
@@ -61,12 +57,12 @@ describe('geoToScene', () => {
       CALDERA_CENTER_LAT,
       CALDERA_CENTER_LON + 0.01,
       0,
-      DEFAULT_BOUNDS,
+      CAMPI_FLEGREI_CONFIG,
       depthScale
     );
     expect(pos.x).toBeGreaterThan(0);
-    // 0.01° lon * 85 km/° * 10 units/km = 8.5 units
-    expect(pos.x).toBeCloseTo(8.5, 1);
+    // 0.01° lon * ~84 km/° (111*cos(40.827°)) * 10 units/km ≈ 8.4 units
+    expect(pos.x).toBeCloseTo(8.4, 1);
   });
 
   it('maps north of center to positive z', () => {
@@ -75,7 +71,7 @@ describe('geoToScene', () => {
       CALDERA_CENTER_LAT + 0.01,
       CALDERA_CENTER_LON,
       0,
-      DEFAULT_BOUNDS,
+      CAMPI_FLEGREI_CONFIG,
       depthScale
     );
     expect(pos.z).toBeGreaterThan(0);
@@ -85,22 +81,22 @@ describe('geoToScene', () => {
 
   it('preserves relative ordering: further east → larger x', () => {
     const depthScale = computeDepthScale([makeEvent({ depth: 3 })]);
-    const posA = geoToScene(CALDERA_CENTER_LAT, 14.10, 2, DEFAULT_BOUNDS, depthScale);
-    const posB = geoToScene(CALDERA_CENTER_LAT, 14.15, 2, DEFAULT_BOUNDS, depthScale);
+    const posA = geoToScene(CALDERA_CENTER_LAT, 14.10, 2, CAMPI_FLEGREI_CONFIG, depthScale);
+    const posB = geoToScene(CALDERA_CENTER_LAT, 14.15, 2, CAMPI_FLEGREI_CONFIG, depthScale);
     expect(posB.x).toBeGreaterThan(posA.x);
   });
 
   it('preserves relative ordering: further north → larger z', () => {
     const depthScale = computeDepthScale([makeEvent({ depth: 3 })]);
-    const posA = geoToScene(40.80, CALDERA_CENTER_LON, 2, DEFAULT_BOUNDS, depthScale);
-    const posB = geoToScene(40.85, CALDERA_CENTER_LON, 2, DEFAULT_BOUNDS, depthScale);
+    const posA = geoToScene(40.80, CALDERA_CENTER_LON, 2, CAMPI_FLEGREI_CONFIG, depthScale);
+    const posB = geoToScene(40.85, CALDERA_CENTER_LON, 2, CAMPI_FLEGREI_CONFIG, depthScale);
     expect(posB.z).toBeGreaterThan(posA.z);
   });
 
   it('preserves relative ordering: deeper → lower y', () => {
     const depthScale = computeDepthScale([makeEvent({ depth: 5 })]);
-    const posA = geoToScene(CALDERA_CENTER_LAT, CALDERA_CENTER_LON, 1, DEFAULT_BOUNDS, depthScale);
-    const posB = geoToScene(CALDERA_CENTER_LAT, CALDERA_CENTER_LON, 3, DEFAULT_BOUNDS, depthScale);
+    const posA = geoToScene(CALDERA_CENTER_LAT, CALDERA_CENTER_LON, 1, CAMPI_FLEGREI_CONFIG, depthScale);
+    const posB = geoToScene(CALDERA_CENTER_LAT, CALDERA_CENTER_LON, 3, CAMPI_FLEGREI_CONFIG, depthScale);
     expect(posB.y).toBeLessThan(posA.y);
   });
 
@@ -112,7 +108,7 @@ describe('geoToScene', () => {
       CALDERA_CENTER_LAT,
       CALDERA_CENTER_LON + deltaLonFor1km,
       0,
-      DEFAULT_BOUNDS,
+      CAMPI_FLEGREI_CONFIG,
       depthScale
     );
     expect(pos.x).toBeCloseTo(10, 0); // 1km = 10 units → 1 unit = 100m

@@ -55,6 +55,50 @@ body {
   z-index: 10;
 }
 
+/* --- Region Switcher --- */
+
+.region-switcher {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+  background: rgba(10, 10, 30, 0.8);
+  backdrop-filter: blur(6px);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.region-switcher label {
+  font-size: 13px;
+  color: #ccc;
+  white-space: nowrap;
+}
+
+.region-switcher select {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  min-height: 36px;
+  cursor: pointer;
+}
+
+.region-switcher select:focus {
+  outline: 2px solid #4a9eff;
+  outline-offset: 1px;
+}
+
+.region-switcher select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* --- Time Slider Controls Panel --- */
 
 .time-slider-controls {

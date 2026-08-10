@@ -430,3 +430,148 @@ describe('DataFetcher.fetch', () => {
     expect(result.warnings).toHaveLength(0);
   });
 });
+
+
+describe('DataFetcher.configure', () => {
+  let fetcher: DataFetcher;
+
+  const validHeader = '#EventID|Time|Latitude|Longitude|Depth/Km|Author|Catalog|Contributor|ContributorID|MagType|Magnitude|MagAuthor|EventLocationName|EventType';
+  const validLine = '12345678|2024-01-15T10:30:00|40.82|14.15|2.5|AUTH|CAT|||Md|1.8|--|Campi Flegrei|earthquake';
+
+  beforeEach(() => {
+    fetcher = new DataFetcher();
+    vi.stubGlobal('fetch', vi.fn());
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('switches endpoint after configure() is called', async () => {
+    const newEndpoint = 'http://www.seismicportal.eu/fdsnws/event/1/query';
+    const newBounds = { minLat: 27.5, maxLat: 29.5, minLon: -18.5, maxLon: -13.3 };
+
+    vi.mocked(globalThis.fetch).mockResolvedValue(
+      new Response([validHeader, validLine].join('\n'), { status: 200 })
+    );
+
+    fetcher.configure(newEndpoint, newBounds);
+    await fetcher.fetch();
+
+    const calledUrl = vi.mocked(globalThis.fetch).mock.calls[0]![0] as string;
+    expect(calledUrl).toContain(newEndpoint);
+    expect(calledUrl).toContain('minlat=27.5');
+    expect(calledUrl).toContain('maxlat=29.5');
+    expect(calledUrl).toContain('minlon=-18.5');
+    expect(calledUrl).toContain('maxlon=-13.3');
+  });
+
+  it('resets previousResult after configure()', async () => {
+    // First fetch succeeds with data
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce(
+      new Response([validHeader, validLine].join('\n'), { status: 200 })
+    );
+    const first = await fetcher.fetch();
+    expect(first.events).toHaveLength(1);
+
+    // Reconfigure to new endpoint
+    fetcher.configure('http://example.com/fdsnws/event/1/query', {
+      minLat: 27.5, maxLat: 29.5, minLon: -18.5, maxLon: -13.3
+    });
+
+    // Next fetch fails — should NOT return previous data (it was cleared by configure)
+    vi.mocked(globalThis.fetch).mockRejectedValueOnce(new TypeError('Network error'));
+    const result = await fetcher.fetch();
+
+    expect(result.events).toHaveLength(0);
+    expect(result.failed).toBe(true);
+  });
+
+  it('buildUrl uses the newly configured endpoint', () => {
+    const newEndpoint = 'http://www.seismicportal.eu/fdsnws/event/1/query';
+    const newBounds = { minLat: 27.5, maxLat: 29.5, minLon: -18.5, maxLon: -13.3 };
+
+    fetcher.configure(newEndpoint, newBounds);
+
+    const url = fetcher.buildUrl({
+      startDate: new Date('2024-01-01T00:00:00Z'),
+      endDate: new Date('2024-01-08T00:00:00Z'),
+    });
+
+    expect(url).toContain(newEndpoint);
+    expect(url).toContain('minlat=27.5');
+    expect(url).toContain('maxlat=29.5');
+    expect(url).toContain('minlon=-18.5');
+    expect(url).toContain('maxlon=-13.3');
+  });
+});
+
+
+describe('DataFetcher.abort', () => {
+  let fetcher: DataFetcher;
+
+  const validHeader = '#EventID|Time|Latitude|Longitude|Depth/Km|Author|Catalog|Contributor|ContributorID|MagType|Magnitude|MagAuthor|EventLocationName|EventType';
+  const validLine = '12345678|2024-01-15T10:30:00|40.82|14.15|2.5|AUTH|CAT|||Md|1.8|--|Campi Flegrei|earthquake';
+
+  beforeEach(() => {
+    fetcher = new DataFetcher();
+    vi.stubGlobal('fetch', vi.fn());
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('abort() cancels an in-flight request', async () => {
+    // First fetch succeeds to populate previousResult
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce(
+      new Response([validHeader, validLine].join('\n'), { status: 200 })
+    );
+    await fetcher.fetch();
+
+    // Set up a fetch that hangs until aborted
+    vi.mocked(globalThis.fetch).mockImplementationOnce((_url, init) => {
+      return new Promise((_resolve, reject) => {
+        (init?.signal as AbortSignal)?.addEventListener('abort', () => {
+          reject(new DOMException('Aborted', 'AbortError'));
+        });
+      });
+    });
+
+    const fetchPromise = fetcher.fetch();
+
+    // Abort while in-flight
+    fetcher.abort();
+
+    const result = await fetchPromise;
+    expect(result.failed).toBe(true);
+    expect(result.events).toHaveLength(1); // retains previous data
+    expect(result.events[0]!.id).toBe('12345678');
+  });
+
+  it('abort() is safe to call when no request is in-flight', () => {
+    // Should not throw
+    expect(() => fetcher.abort()).not.toThrow();
+  });
+
+  it('configure() aborts an in-flight request', async () => {
+    // Set up a fetch that hangs until aborted
+    vi.mocked(globalThis.fetch).mockImplementationOnce((_url, init) => {
+      return new Promise((_resolve, reject) => {
+        (init?.signal as AbortSignal)?.addEventListener('abort', () => {
+          reject(new DOMException('Aborted', 'AbortError'));
+        });
+      });
+    });
+
+    const fetchPromise = fetcher.fetch();
+
+    // configure() should abort in-flight request
+    fetcher.configure('http://example.com/api', {
+      minLat: 10, maxLat: 20, minLon: 30, maxLon: 40
+    });
+
+    const result = await fetchPromise;
+    expect(result.failed).toBe(true);
+  });
+});
