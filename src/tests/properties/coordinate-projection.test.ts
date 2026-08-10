@@ -93,7 +93,7 @@ describe('Property 9: Coordinate Projection Bijectivity and Ordering', () => {
     );
   });
 
-  it('north ordering: lat_a > lat_b implies scene_a.z > scene_b.z', () => {
+  it('north ordering: lat_a > lat_b implies scene_a.z < scene_b.z', () => {
     fc.assert(
       fc.property(
         arbLat,
@@ -107,7 +107,7 @@ describe('Property 9: Coordinate Projection Bijectivity and Ordering', () => {
           const posA = geoToScene(latA, lon, depth, CAMPI_FLEGREI_CONFIG, depthScale);
           const posB = geoToScene(latB, lon, depth, CAMPI_FLEGREI_CONFIG, depthScale);
 
-          expect(posA.z).toBeGreaterThan(posB.z);
+          expect(posA.z).toBeLessThan(posB.z);
         }
       ),
       { numRuns: 100 }

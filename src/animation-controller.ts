@@ -77,7 +77,9 @@ export class AnimationController {
   }
 
   getProgress(): number {
-    if (this.timeSpanMs === 0) return 0;
+    if (this.timeSpanMs === 0) {
+      return this.state === 'stopped' ? 0 : 1;
+    }
     return (this.virtualTimeMs - this.startTimeMs) / this.timeSpanMs;
   }
 
@@ -92,21 +94,30 @@ export class AnimationController {
    */
   tick(deltaTime: number): void {
     if (this.state === 'playing') {
-      // Calculate how fast virtual time advances (ms of virtual time per second of real time)
-      const effectiveDurationSec = this.config.defaultDurationSec / this.config.speedMultiplier;
-      const virtualTimeSpeed = this.timeSpanMs / effectiveDurationSec; // ms virtual per second real
+      if (this.timeSpanMs === 0) {
+        // Single event or all events at same time: show immediately, stay playing briefly
+        this.realTimeElapsed += deltaTime;
+        // After 1 second of real time, pause (gives user time to see the event)
+        if (this.realTimeElapsed >= 1.0) {
+          this.state = 'paused';
+        }
+      } else {
+        // Calculate how fast virtual time advances (ms of virtual time per second of real time)
+        const effectiveDurationSec = this.config.defaultDurationSec / this.config.speedMultiplier;
+        const virtualTimeSpeed = this.timeSpanMs / effectiveDurationSec; // ms virtual per second real
 
-      // Advance virtual time
-      this.virtualTimeMs += virtualTimeSpeed * deltaTime;
+        // Advance virtual time
+        this.virtualTimeMs += virtualTimeSpeed * deltaTime;
 
-      // Clamp to end
-      if (this.virtualTimeMs >= this.endTimeMs) {
-        this.virtualTimeMs = this.endTimeMs;
-        this.state = 'paused';
+        // Clamp to end
+        if (this.virtualTimeMs >= this.endTimeMs) {
+          this.virtualTimeMs = this.endTimeMs;
+          this.state = 'paused';
+        }
+
+        // Track real time for highlight calculations
+        this.realTimeElapsed += deltaTime;
       }
-
-      // Track real time for highlight calculations
-      this.realTimeElapsed += deltaTime;
     }
 
     // Compute visible events

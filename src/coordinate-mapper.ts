@@ -77,7 +77,7 @@ export function geoToScene(
   const deltaLon = lon - config.centerLon;
 
   const x = deltaLon * config.kmPerDegreeLon * HORIZONTAL_SCALE;
-  const z = deltaLat * config.kmPerDegreeLat * HORIZONTAL_SCALE;
+  const z = -(deltaLat * config.kmPerDegreeLat * HORIZONTAL_SCALE);
 
   // Vertical mapping: use depth scale's toSceneY for consistent depth rendering
   const y = depthScale.toSceneY(depth);

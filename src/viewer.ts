@@ -73,6 +73,7 @@ export class Viewer {
     this.initTownLabels();
     this.initDepthAxis();
     this.initEventListeners();
+    this.resetCamera(0);
     this.startRenderLoop();
   }
 
@@ -418,7 +419,7 @@ export class Viewer {
     this.config.centerLat = config.center.lat;
     this.config.centerLon = config.center.lon;
     this.mapperConfig = mapperConfig;
-    this.initSurfacePlanes();
+    this.initSurfacePlanes(config.coastlinePolylines);
     this.initCoastlineFrom(config.coastlinePolylines);
     this.initTownLabelsFrom(config.towns);
     this.resetCamera(config.cameraDistance);
@@ -426,9 +427,39 @@ export class Viewer {
 
   // --- Private methods ---
 
-  private resetCamera(distance: number): void {
-    this.camera.position.set(distance * 0.33, distance * 0.53, distance * 0.8);
+  private resetCamera(_configDistance: number): void {
+    // Compute scene extent from current bounds to determine appropriate camera distance
+    const surfaceDepthScale: DepthScale = {
+      minDepth: 0,
+      maxDepth: 2,
+      sceneMinY: -4,
+      sceneMaxY: 0,
+      toSceneY: (_d: number) => 0,
+    };
+
+    const nw = geoToScene(this.config.bounds.maxLat, this.config.bounds.minLon, 0, this.mapperConfig, surfaceDepthScale);
+    const se = geoToScene(this.config.bounds.minLat, this.config.bounds.maxLon, 0, this.mapperConfig, surfaceDepthScale);
+
+    const extentX = Math.abs(se.x - nw.x);
+    const extentZ = Math.abs(nw.z - se.z);
+    const maxExtent = Math.max(extentX, extentZ);
+
+    // Compute camera distance to fit the full extent in view
+    // Uses FOV-based calculation: distance = (maxExtent / 2) / tan(FOV / 2)
+    const fovRad = (this.camera.fov * Math.PI) / 180;
+    const fitDistance = (maxExtent / 2) / Math.tan(fovRad / 2);
+
+    // Apply a slight margin factor
+    const d = fitDistance * 0.85;
+
+    this.camera.position.set(d * 0.25, d * 0.45, d * 0.7);
     this.camera.lookAt(0, -2, 0);
+
+    // Update clipping planes to accommodate the computed distance
+    const cameraDistance = this.camera.position.length();
+    this.camera.near = cameraDistance * 0.01;  // 1% of distance
+    this.camera.far = cameraDistance * 5;       // 5x distance for safety
+    this.camera.updateProjectionMatrix();
   }
 
   private initRenderer(): void {
@@ -448,10 +479,6 @@ export class Viewer {
     const aspect =
       this.config.container.clientWidth / this.config.container.clientHeight;
     this.camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
-
-    // Position camera to look at the caldera center from above and slightly offset
-    this.camera.position.set(5, 8, 12);
-    this.camera.lookAt(0, -2, 0);
   }
 
   private initScene(): void {
@@ -470,7 +497,8 @@ export class Viewer {
     this.scene.add(directionalLight);
   }
 
-  private initSurfacePlanes(): void {
+  private initSurfacePlanes(coastlinePolylines?: [number, number][][]): void {
+    const polys = coastlinePolylines ?? COASTLINE_POLYLINES;
     const surfaceDepthScale: DepthScale = {
       minDepth: 0,
       maxDepth: 2,
@@ -507,32 +535,7 @@ export class Viewer {
     waterMesh.name = 'waterPlane';
     this.scene.add(waterMesh);
 
-    // Land shape (north of coastline)
-    const mainCoast = COASTLINE_POLYLINES[0];
-    const coastScenePoints = mainCoast.map(([lat, lon]) => {
-      const p = geoToScene(lat, lon, 0, this.mapperConfig, surfaceDepthScale);
-      return { x: p.x, z: p.z };
-    });
-
-    // Build land polygon: westernmost coast point → NW corner → NE corner → easternmost coast point → follow coast back
-    const landShape = new THREE.Shape();
-    const firstCoast = coastScenePoints[0];
-    const lastCoast = coastScenePoints[coastScenePoints.length - 1];
-
-    landShape.moveTo(firstCoast.x, -firstCoast.z);
-    // Up to northwest corner (same x as first coast point, max z)
-    landShape.lineTo(nw.x, -nw.z);
-    // Along top to northeast
-    landShape.lineTo(ne.x, -ne.z);
-    // Down to last coast point
-    landShape.lineTo(lastCoast.x, -lastCoast.z);
-    // Follow coastline from east to west (reverse order)
-    for (let i = coastScenePoints.length - 1; i >= 0; i--) {
-      landShape.lineTo(coastScenePoints[i].x, -coastScenePoints[i].z);
-    }
-    landShape.closePath();
-
-    const landGeometry = new THREE.ShapeGeometry(landShape);
+    // Land material (shared)
     const landMaterial = new THREE.MeshBasicMaterial({
       color: 0x2d5a3a,
       transparent: true,
@@ -540,11 +543,56 @@ export class Viewer {
       side: THREE.DoubleSide,
       depthWrite: false,
     });
-    const landMesh = new THREE.Mesh(landGeometry, landMaterial);
-    landMesh.rotation.x = -Math.PI / 2;
-    landMesh.position.y = 0.005;
-    landMesh.name = 'landPlane';
-    this.scene.add(landMesh);
+
+    for (let i = 0; i < polys.length; i++) {
+      const polyline = polys[i];
+      if (polyline.length < 3) continue;
+
+      // Check if polyline is closed (first ≈ last point)
+      const first = polyline[0];
+      const last = polyline[polyline.length - 1];
+      const isClosed = Math.abs(first[0] - last[0]) < 0.01 && Math.abs(first[1] - last[1]) < 0.01;
+
+      const coastScenePoints = polyline.map(([lat, lon]) => {
+        const p = geoToScene(lat, lon, 0, this.mapperConfig, surfaceDepthScale);
+        return { x: p.x, z: p.z };
+      });
+
+      let landShape: THREE.Shape;
+
+      if (isClosed) {
+        // Island/closed polygon: draw as filled polygon directly
+        landShape = new THREE.Shape();
+        landShape.moveTo(coastScenePoints[0].x, -coastScenePoints[0].z);
+        for (let j = 1; j < coastScenePoints.length; j++) {
+          landShape.lineTo(coastScenePoints[j].x, -coastScenePoints[j].z);
+        }
+        landShape.closePath();
+      } else {
+        // Open coastline: fill land area north of the coast (to bounding box edges)
+        // Build polygon: first coast point → NW corner → NE corner → last coast point → follow coast back
+        landShape = new THREE.Shape();
+        const firstCoast = coastScenePoints[0];
+        const lastCoast = coastScenePoints[coastScenePoints.length - 1];
+
+        landShape.moveTo(firstCoast.x, -firstCoast.z);
+        landShape.lineTo(nw.x, -nw.z);
+        landShape.lineTo(ne.x, -ne.z);
+        landShape.lineTo(lastCoast.x, -lastCoast.z);
+        // Follow coastline from east to west (reverse order)
+        for (let j = coastScenePoints.length - 1; j >= 0; j--) {
+          landShape.lineTo(coastScenePoints[j].x, -coastScenePoints[j].z);
+        }
+        landShape.closePath();
+      }
+
+      const landGeometry = new THREE.ShapeGeometry(landShape);
+      const landMesh = new THREE.Mesh(landGeometry, landMaterial);
+      landMesh.rotation.x = -Math.PI / 2;
+      landMesh.position.y = 0.005;
+      landMesh.name = 'landPlane';
+      this.scene.add(landMesh);
+    }
   }
 
   private initCoastline(): void {

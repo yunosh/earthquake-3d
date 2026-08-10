@@ -1,0 +1,469 @@
+{
+  "pbtResults": {
+    "4.4 Write property test: Registry lookup round-trip (Property 1)": {
+      "status": "passed",
+      "lastRunTimestamp": 1786387925176
+    },
+    "8.2 Write property tests for RegionSwitcher (Properties 5 and 6)": {
+      "status": "passed",
+      "lastRunTimestamp": 1786388170857
+    },
+    "10.2 Write property tests for CoordinateMapper parameterization (Properties 7 and 8)": {
+      "status": "passed",
+      "lastRunTimestamp": 1786388489298
+    },
+    "10.3 Write property tests for DataFetcher region configuration (Properties 2, 3, 4)": {
+      "status": "passed",
+      "lastRunTimestamp": 1786388542719
+    }
+  },
+  "executionHistory": {
+    "1.1 Add `CoordinateMapperConfig` interface and `createCoordinateMapperConfig` factory function to `src/coordinate-mapper.ts`": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386075717
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386086545
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386215467
+      }
+    ],
+    "1.2 Update all call sites of `geoToScene` in `src/viewer.ts`": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386075792
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386220948
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386342315
+      }
+    ],
+    "1.3 Update existing tests for the new `geoToScene` signature": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386075857
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386221913
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386343283
+      }
+    ],
+    "2.1 Add `configure(endpoint, bounds)` and `abort()` methods to `src/data-fetcher.ts`": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386075917
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386087442
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386216483
+      }
+    ],
+    "2.2 Update `src/tests/integration/pipeline.test.ts` and `src/tests/data-fetcher.test.ts` if needed": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386075965
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386222838
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386344344
+      }
+    ],
+    "3. Checkpoint — Refactoring abgeschlossen": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076012
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386358063
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386426166
+      }
+    ],
+    "4.1 Create `src/region-config.ts` with `RegionConfig` interface": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076063
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386359016
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386426991
+      }
+    ],
+    "4.2 Create `src/region-registry.ts` with registry functions": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076104
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386432267
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786387847211
+      }
+    ],
+    "4.3 Create `src/regions/campi-flegrei.ts` with Campi Flegrei RegionConfig": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076152
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386433117
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786387848005
+      }
+    ],
+    "4.4 Write property test: Registry lookup round-trip (Property 1)": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076200
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786387853641
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786387937832
+      }
+    ],
+    "5.1 Create `src/canary-coastline-data.ts` with coastline polylines for all 7 main islands": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076251
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386434065
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786387849026
+      }
+    ],
+    "5.2 Create `src/regions/canary-islands.ts` with Canary Islands RegionConfig": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076292
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786387854578
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786387938727
+      }
+    ],
+    "6. Checkpoint — Configuration Layer abgeschlossen": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076357
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786387951494
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388104725
+      }
+    ],
+    "7.1 Add `clearRegionElements()` and `setupRegion()` methods to `src/viewer.ts`": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076400
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786387952535
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388105616
+      }
+    ],
+    "7.2 Write unit tests for `clearRegionElements` and `setupRegion`": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076443
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388111183
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388222047
+      }
+    ],
+    "8.1 Create `src/ui/region-switcher.ts`": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076508
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786387953291
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388106497
+      }
+    ],
+    "8.2 Write property tests for RegionSwitcher (Properties 5 and 6)": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076559
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388112108
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388224070
+      }
+    ],
+    "9. Checkpoint — Neue Komponenten fertig": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076606
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388230099
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388418912
+      }
+    ],
+    "10.1 Integrate region system into `src/main.ts`": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076669
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388230838
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388419773
+      }
+    ],
+    "10.2 Write property tests for CoordinateMapper parameterization (Properties 7 and 8)": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076720
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388426243
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388559386
+      }
+    ],
+    "10.3 Write property tests for DataFetcher region configuration (Properties 2, 3, 4)": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076764
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388427187
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388560387
+      }
+    ],
+    "11.1 Add RegionSwitcher styles to `src/style.css`": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076814
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388231768
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388420785
+      }
+    ],
+    "12. Final checkpoint — Alles verdrahtet": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386076884
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388565403
+      },
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388677037
+      }
+    ],
+    "1. Refactor CoordinateMapper: Parametrisierung statt Hardcoding": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386343348
+      }
+    ],
+    "2. Refactor DataFetcher: Configurable endpoint and abort support": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786386344393
+      }
+    ],
+    "4. Create Region Configuration System": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786387937889
+      }
+    ],
+    "5. Create Canary Islands Region Data": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786387938767
+      }
+    ],
+    "7. Extend Viewer with region-switch capabilities": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388222112
+      }
+    ],
+    "8. Create RegionSwitcher UI component": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388224129
+      }
+    ],
+    "11. Add CSS styles for RegionSwitcher": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388420843
+      }
+    ],
+    "10. Wire everything together in main.ts": [
+      {
+        "executionId": "db519386-7734-46ee-99b5-099dc9dd5276",
+        "chatSessionId": "sess_3c38ab80-b780-4727-a256-505c2874bd05",
+        "timestamp": 1786388560450
+      }
+    ]
+  }
+}

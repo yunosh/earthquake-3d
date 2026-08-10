@@ -280,7 +280,7 @@ describe('Viewer.setupRegion', () => {
     expect(scene.getObjectByName('town-dot-Las Palmas')).toBeDefined();
   });
 
-  it('should update the camera position based on cameraDistance', () => {
+  it('should update the camera position based on region bounds extent', () => {
     const camera = viewer.getCamera();
     const mapperConfig = createCoordinateMapperConfig(
       mockCanaryConfig.center.lat,
@@ -289,11 +289,15 @@ describe('Viewer.setupRegion', () => {
 
     viewer.setupRegion(mockCanaryConfig, mapperConfig);
 
-    // Camera should be repositioned using the config's cameraDistance (60)
-    const d = mockCanaryConfig.cameraDistance;
-    expect(camera.position.x).toBeCloseTo(d * 0.33, 1);
-    expect(camera.position.y).toBeCloseTo(d * 0.53, 1);
-    expect(camera.position.z).toBeCloseTo(d * 0.8, 1);
+    // Camera should be positioned at a reasonable distance to fit the bounds
+    expect(camera.position.x).toBeGreaterThan(0);
+    expect(camera.position.y).toBeGreaterThan(0);
+    // Camera Z is positive (at south side, looking toward north = -Z)
+    expect(camera.position.z).toBeGreaterThan(0);
+
+    // For the Canary Islands with large extent, the camera should be far back
+    // The extent is roughly 5000+ scene units, so the absolute camera z should be substantial
+    expect(Math.abs(camera.position.z)).toBeGreaterThan(100);
   });
 
   it('should preserve non-region elements (lights, depthAxis)', () => {

@@ -87,17 +87,25 @@ async function main(): Promise<void> {
   });
   viewer.init();
 
-  // 6. Create RegionSwitcher in UI container
-  const allRegions = getAllRegions();
-  const regionSwitcher = new RegionSwitcher(uiContainer, allRegions.map(r => ({ id: r.id, title: r.title })));
-  regionSwitcher.setActive(activeRegion.id);
-
+  // 6. Create TimeSlider first, then insert RegionSwitcher at the beginning of its controls
   const timeSlider = new TimeSlider({
     container: uiContainer,
     minDate: new Date('2000-01-01T00:00:00Z'),
     maxDate: new Date(),
     defaultRange: activeRegion.defaultTimeRangeDays,
   });
+
+  // Insert RegionSwitcher as the first element inside the time-slider-controls panel
+  const allRegions = getAllRegions();
+  const controlsPanel = uiContainer.querySelector('.time-slider-controls') as HTMLElement;
+  const regionSwitcher = new RegionSwitcher(controlsPanel, allRegions.map(r => ({ id: r.id, title: r.title })));
+  regionSwitcher.setActive(activeRegion.id);
+
+  // Move region-switcher to be the first child in the controls panel
+  const regionSwitcherEl = controlsPanel.querySelector('.region-switcher');
+  if (regionSwitcherEl && controlsPanel.firstChild) {
+    controlsPanel.insertBefore(regionSwitcherEl, controlsPanel.firstChild);
+  }
 
   // 7. Set up OrbitControls on the Viewer's camera/renderer
   const controls = new OrbitControls(viewer.getCamera(), viewer.getRenderer().domElement);
@@ -252,6 +260,14 @@ async function main(): Promise<void> {
 
     // Setup Viewer with new region (clears old elements, rebuilds scene)
     viewer.setupRegion(activeRegion, mapperConfig);
+
+    // Update OrbitControls to respect new camera position
+    controls.target.set(0, -2, 0);
+    controls.update();
+
+    // Pause auto-rotation briefly so user can orient themselves
+    rotationEngine.onInteractionStart();
+    setTimeout(() => rotationEngine.onInteractionEnd(), 5000);
 
     // Reconfigure DataFetcher with new endpoint and bounds
     dataFetcher.configure(activeRegion.apiEndpoint, activeRegion.bounds);
