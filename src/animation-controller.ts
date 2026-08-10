@@ -34,8 +34,8 @@ export class AnimationController {
     );
 
     if (this.sortedEvents.length === 0) {
-      this.startTimeMs = 0;
-      this.endTimeMs = 0;
+      this.startTimeMs = Date.now();
+      this.endTimeMs = Date.now();
       this.timeSpanMs = 0;
     } else {
       this.startTimeMs = this.sortedEvents[0]!.timestamp.getTime();

@@ -205,7 +205,9 @@ async function main(): Promise<void> {
   async function fetchAndSetupAnimation(): Promise<void> {
     timeSlider.setLoading(true);
     try {
-      const result = await dataFetcher.fetch();
+      const now = new Date();
+      const start = new Date(now.getTime() - activeRegion.defaultTimeRangeDays * 24 * 60 * 60 * 1000);
+      const result = await dataFetcher.fetch({ startDate: start, endDate: now });
 
       handleFetchResult(result);
 
