@@ -222,6 +222,15 @@ export class Viewer {
     // SphereGeometry with unit radius (scaled per-instance)
     this.sphereGeometry = new THREE.SphereGeometry(1, 16, 12);
 
+    // Override bounding sphere to encompass all possible instance positions.
+    // Required for Three.js InstancedMesh raycasting (initial culling check).
+    // Without this, the default bounding sphere (radius 1 at origin) causes the
+    // raycaster to skip instances positioned far from the origin.
+    this.sphereGeometry.boundingSphere = new THREE.Sphere(
+      new THREE.Vector3(0, -5, 0),
+      50
+    );
+
     // MeshStandardMaterial to interact with scene lighting
     this.instanceMaterial = new THREE.MeshStandardMaterial({
       roughness: 0.5,
