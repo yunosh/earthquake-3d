@@ -15,7 +15,7 @@ export const canaryIslands: RegionConfig = {
     { name: 'Arrecife', lat: 28.9630, lon: -13.5477 },
     { name: 'Puerto del Rosario', lat: 28.5004, lon: -13.8627 },
   ],
-  apiEndpoint: 'https://earthquake.usgs.gov/fdsnws/event/1/query',
+  apiEndpoint: 'https://www.seismicportal.eu/fdsnws/event/1/query',
   apiFormat: 'fdsn-text',
   defaultTimeRangeDays: 365,
   cameraDistance: 60,
