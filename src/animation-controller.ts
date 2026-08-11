@@ -78,7 +78,9 @@ export class AnimationController {
 
   getProgress(): number {
     if (this.timeSpanMs === 0) {
-      return this.state === 'stopped' ? 0 : 1;
+      if (this.state === 'stopped') return 0;
+      const effectiveDurationSec = this.config.defaultDurationSec / this.config.speedMultiplier;
+      return Math.min(this.realTimeElapsed / effectiveDurationSec, 1);
     }
     return (this.virtualTimeMs - this.startTimeMs) / this.timeSpanMs;
   }
@@ -95,10 +97,11 @@ export class AnimationController {
   tick(deltaTime: number): void {
     if (this.state === 'playing') {
       if (this.timeSpanMs === 0) {
-        // Single event or all events at same time: show immediately, stay playing briefly
+        // Use real-time progression over the configured duration
         this.realTimeElapsed += deltaTime;
-        // After 1 second of real time, pause (gives user time to see the event)
-        if (this.realTimeElapsed >= 1.0) {
+        const effectiveDurationSec = this.config.defaultDurationSec / this.config.speedMultiplier;
+        if (this.realTimeElapsed >= effectiveDurationSec) {
+          this.realTimeElapsed = effectiveDurationSec;
           this.state = 'paused';
         }
       } else {
