@@ -186,6 +186,20 @@ export class Viewer {
       return;
     }
 
+    // Compute scene extent for size scaling (once, outside the loop)
+    const surfaceDepthScale: DepthScale = {
+      minDepth: 0, maxDepth: 2, sceneMinY: -4, sceneMaxY: 0,
+      toSceneY: (_d: number) => 0,
+    };
+    const nw = geoToScene(this.config.bounds.maxLat, this.config.bounds.minLon, 0, this.mapperConfig, surfaceDepthScale);
+    const se = geoToScene(this.config.bounds.minLat, this.config.bounds.maxLon, 0, this.mapperConfig, surfaceDepthScale);
+    const extentX = Math.abs(se.x - nw.x);
+    const extentZ = Math.abs(nw.z - se.z);
+    const maxExtent = Math.max(extentX, extentZ);
+
+    // Scale factor: make spheres ~0.3% of scene extent based on magnitude
+    const baseScale = maxExtent * 0.003;
+
     for (let i = 0; i < count; i++) {
       const ve = events[i]!;
       const ev = ve.event;
@@ -199,10 +213,9 @@ export class Viewer {
         this.depthScale
       );
 
-      // Compute fixed world-space radius from magnitude
-      // magnitudeScale.toRadius gives 2-16px range, map to 0.05-0.4 world units
+      // Compute world-space radius from magnitude, scaled relative to scene extent
       const screenPx = magnitudeScale.toRadius(ev.magnitude);
-      const worldRadius = screenPx * 0.06; // 2px→0.12, 16px→0.96 world units
+      const worldRadius = (screenPx / 16) * baseScale; // normalized to [0..1] * baseScale
 
       // Apply highlight scale pulse: if isNew, scale = 1.5 - 0.5 * highlightProgress
       let scale = worldRadius;

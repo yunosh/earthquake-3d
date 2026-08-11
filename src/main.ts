@@ -1,4 +1,5 @@
 import './style.css';
+import { MOUSE, TOUCH } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { DataFetcher } from './data-fetcher';
 import { Viewer } from './viewer';
@@ -111,7 +112,18 @@ async function main(): Promise<void> {
   const controls = new OrbitControls(viewer.getCamera(), viewer.getRenderer().domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
-  controls.target.set(0, -2, 0); // Look slightly below surface (center depth area)
+  controls.target.set(0, 0, 0);
+  controls.enablePan = true;
+  controls.screenSpacePanning = true;
+  controls.mouseButtons = {
+    LEFT: MOUSE.ROTATE,
+    MIDDLE: MOUSE.PAN,
+    RIGHT: MOUSE.PAN,
+  };
+  controls.touches = {
+    ONE: TOUCH.ROTATE,
+    TWO: TOUCH.DOLLY_PAN,
+  };
   controls.update();
 
   // 8. Set up RotationEngine
@@ -264,7 +276,7 @@ async function main(): Promise<void> {
     viewer.setupRegion(activeRegion, mapperConfig);
 
     // Update OrbitControls to respect new camera position
-    controls.target.set(0, -2, 0);
+    controls.target.set(0, 0, 0);
     controls.update();
 
     // Pause auto-rotation briefly so user can orient themselves
