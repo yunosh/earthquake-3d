@@ -266,6 +266,7 @@ export class Viewer {
     );
     this.instancedMesh.count = 0; // Start with no visible instances
     this.instancedMesh.name = 'earthquakePoints';
+    this.instancedMesh.frustumCulled = false; // Instances are spread across the scene
 
     // Enable per-instance color
     this.instancedMesh.instanceColor = new THREE.InstancedBufferAttribute(
