@@ -218,8 +218,13 @@ async function main(): Promise<void> {
     timeSlider.setLoading(true);
     try {
       const now = new Date();
-      const start = new Date(now.getTime() - activeRegion.defaultTimeRangeDays * 24 * 60 * 60 * 1000);
-      const result = await dataFetcher.fetch({ startDate: start, endDate: now });
+      // Respect whatever range the user currently has selected in the TimeSlider
+      // (e.g. after a region switch); only fall back to the region default
+      // if no valid range is set yet (initial load).
+      const range = timeSlider.getRange();
+      const start = range?.start ?? new Date(now.getTime() - activeRegion.defaultTimeRangeDays * 24 * 60 * 60 * 1000);
+      const end = range?.end ?? now;
+      const result = await dataFetcher.fetch({ startDate: start, endDate: end });
 
       handleFetchResult(result);
 

@@ -67,6 +67,16 @@ export class TimeSlider {
 
   // --- Public API: State setters ---
 
+  /** Currently selected start/end dates from the input fields. */
+  getRange(): { start: Date; end: Date } | null {
+    const start = parseDateInput(this.startInput.value);
+    const end = parseDateInput(this.endInput.value);
+    if (start && end && start < end) {
+      return { start, end };
+    }
+    return null;
+  }
+
   setProgress(progress: number): void {
     const clamped = Math.max(0, Math.min(1, progress));
     this.progressBar.value = clamped;
