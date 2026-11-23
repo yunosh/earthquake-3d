@@ -7,6 +7,7 @@ import { AnimationController } from './animation-controller';
 import { RotationEngine } from './rotation-engine';
 import { TimeSlider } from './ui/time-slider';
 import { RegionSwitcher } from './ui/region-switcher';
+import { GestureLegend } from './ui/gesture-legend';
 import { computeDepthScale, createCoordinateMapperConfig } from './coordinate-mapper';
 import { registerRegion, getRegion, getAllRegions, getDefaultRegionId } from './region-registry';
 import { campiFlegrei } from './regions/campi-flegrei';
@@ -47,9 +48,9 @@ async function main(): Promise<void> {
   if (!isWebGLAvailable()) {
     appContainer.innerHTML = `
       <div class="webgl-error">
-        <h2>WebGL nicht verfügbar</h2>
-        <p>Ihr Browser unterstützt kein WebGL. Bitte verwenden Sie einen aktuellen Browser 
-        (Chrome, Firefox, Safari oder Edge in der aktuellen Version).</p>
+        <h2>WebGL not available</h2>
+        <p>Your browser does not support WebGL. Please use a current browser
+        (Chrome, Firefox, Safari, or Edge in its latest version).</p>
       </div>
     `;
     return;
@@ -71,6 +72,11 @@ async function main(): Promise<void> {
   const uiContainer = document.createElement('div');
   uiContainer.id = 'ui-container';
   appContainer.appendChild(uiContainer);
+
+  const legendContainer = document.createElement('div');
+  legendContainer.id = 'gesture-legend-container';
+  appContainer.appendChild(legendContainer);
+  new GestureLegend(legendContainer);
 
   // 5. Initialize core modules with active region values
   const dataFetcher = new DataFetcher({
@@ -151,7 +157,7 @@ async function main(): Promise<void> {
 
   canvas.addEventListener('webglcontextlost', (e: Event) => {
     e.preventDefault();
-    timeSlider.showError('Rendering unterbrochen, Wiederherstellung...');
+    timeSlider.showError('Rendering interrupted, recovering...');
 
     // Set a 5s timeout for recovery attempt
     if (webglRecoveryTimeout !== null) {
@@ -159,7 +165,7 @@ async function main(): Promise<void> {
     }
     webglRecoveryTimeout = setTimeout(() => {
       timeSlider.showError(
-        'WebGL-Kontext konnte nicht wiederhergestellt werden. Bitte laden Sie die Seite neu.'
+        'WebGL context could not be restored. Please reload the page.'
       );
     }, WEBGL_RECOVERY_TIMEOUT_MS);
   });
@@ -170,7 +176,7 @@ async function main(): Promise<void> {
       clearTimeout(webglRecoveryTimeout);
       webglRecoveryTimeout = null;
     }
-    timeSlider.showInfo('Rendering wiederhergestellt.');
+    timeSlider.showInfo('Rendering restored.');
   });
 
   // 11. AnimationController (initialized after data fetch)
@@ -195,19 +201,19 @@ async function main(): Promise<void> {
   function handleFetchResult(result: FetchResult): void {
     if (result.failed) {
       timeSlider.showError(
-        'Daten konnten nicht geladen werden. Bitte versuchen Sie es später erneut.'
+        'Data could not be loaded. Please try again later.'
       );
       return;
     }
 
     if (result.warnings.length > 0) {
       timeSlider.showWarning(
-        `${result.warnings.length} Einträge konnten nicht verarbeitet werden.`
+        `${result.warnings.length} entries could not be processed.`
       );
     } else if (result.events.length === 0) {
-      timeSlider.showInfo('Keine Erdbeben im gewählten Zeitraum gefunden.');
+      timeSlider.showInfo('No earthquakes found in the selected time range.');
     } else {
-      timeSlider.showInfo(`${result.events.length} Erdbeben geladen.`);
+      timeSlider.showInfo(`${result.events.length} earthquakes loaded.`);
     }
   }
 
@@ -242,7 +248,7 @@ async function main(): Promise<void> {
       });
       animationController.onFrame(onAnimationFrame);
     } catch (error) {
-      timeSlider.showError('Daten konnten nicht geladen werden. Bitte versuchen Sie es später erneut.');
+      timeSlider.showError('Data could not be loaded. Please try again later.');
       console.error('[main] Data fetch failed:', error);
     } finally {
       timeSlider.setLoading(false);
@@ -334,7 +340,7 @@ async function main(): Promise<void> {
       viewer.updateVisibleEvents([]);
       timeSlider.setProgress(0);
     } catch (error) {
-      timeSlider.showError('Daten konnten nicht geladen werden.');
+      timeSlider.showError('Data could not be loaded.');
       console.error('[main] Data fetch for new range failed:', error);
     } finally {
       timeSlider.setLoading(false);
@@ -405,8 +411,8 @@ main().catch((error) => {
   if (app) {
     app.innerHTML = `
       <div class="webgl-error">
-        <h2>Fehler beim Starten</h2>
-        <p>Die Anwendung konnte nicht gestartet werden. Bitte laden Sie die Seite neu.</p>
+        <h2>Startup error</h2>
+        <p>The application could not be started. Please reload the page.</p>
       </div>
     `;
   }

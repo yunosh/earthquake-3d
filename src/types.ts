@@ -1,54 +1,54 @@
-/** Ein einzelnes Erdbeben-Event vom INGV API */
+/** A single earthquake event from the INGV API */
 export interface EarthquakeEvent {
   id: string;           // INGV EventID
-  timestamp: Date;      // UTC, Sekundenpräzision
-  latitude: number;     // Grad Nord (40.78 - 40.90)
-  longitude: number;    // Grad Ost (14.03 - 14.22)
-  depth: number;        // km unter Meeresspiegel (positiver Wert)
-  magnitude: number;    // Lokale Magnitude / Md
-  magnitudeType: string; // z.B. "Md", "ML"
-  locationName: string;  // z.B. "Campi Flegrei"
+  timestamp: Date;      // UTC, second precision
+  latitude: number;     // degrees North (40.78 - 40.90)
+  longitude: number;    // degrees East (14.03 - 14.22)
+  depth: number;        // km below sea level (positive value)
+  magnitude: number;    // local magnitude / Md
+  magnitudeType: string; // e.g. "Md", "ML"
+  locationName: string;  // e.g. "Campi Flegrei"
 }
 
-/** Darstellungszustand eines Events im 3D-Raum */
+/** Display state of an event in 3D space */
 export interface VisibleEvent {
   event: EarthquakeEvent;
-  age: number;              // 0.0 = gerade erschienen, 1.0 = ältestes Event
-  isNew: boolean;           // Highlight-Effekt aktiv
-  highlightProgress: number; // 0.0 (Start) bis 1.0 (Highlight beendet)
+  age: number;              // 0.0 = just appeared, 1.0 = oldest event
+  isNew: boolean;           // highlight effect active
+  highlightProgress: number; // 0.0 (start) to 1.0 (highlight finished)
 }
 
-/** 3D-Position eines Events in der Szene (berechnete Werte) */
+/** 3D position of an event in the scene (computed values) */
 export interface ScenePosition {
-  x: number;  // longitude → x (zentriert auf Caldera-Mitte)
-  y: number;  // depth → y (negativ, nach unten)
-  z: number;  // latitude → z (zentriert auf Caldera-Mitte)
+  x: number;  // longitude → x (centered on caldera center)
+  y: number;  // depth → y (negative, downward)
+  z: number;  // latitude → z (centered on caldera center)
 }
 
-/** Farbkodierung basierend auf Alter */
+/** Color coding based on age */
 export interface ColorMapping {
   interpolate(age: number): { h: number; s: number; l: number };
 }
 
-/** Dynamische Tiefenskalierung */
+/** Dynamic depth scaling */
 export interface DepthScale {
-  minDepth: number;     // Minimum aus geladenen Daten (km)
-  maxDepth: number;     // Maximum aus geladenen Daten (km)
-  sceneMinY: number;    // Untere Grenze der Szene (World Units)
-  sceneMaxY: number;    // Obere Grenze (0 = Oberfläche)
-  toSceneY(depth: number): number;  // depth → y-Koordinate
+  minDepth: number;     // minimum from loaded data (km)
+  maxDepth: number;     // maximum from loaded data (km)
+  sceneMinY: number;    // lower bound of the scene (world units)
+  sceneMaxY: number;    // upper bound (0 = surface)
+  toSceneY(depth: number): number;  // depth → y coordinate
 }
 
-/** Größen-Mapping basierend auf Magnitude */
+/** Size mapping based on magnitude */
 export interface MagnitudeScale {
   minMag: number;       // 0
   maxMag: number;       // 4
   minRadius: number;    // 2px (screen-projected)
   maxRadius: number;    // 16px (screen-projected)
-  toRadius(magnitude: number): number;  // Clamped linear mapping
+  toRadius(magnitude: number): number;  // clamped linear mapping
 }
 
-/** INGV API Roh-Datenzeile */
+/** Raw INGV API data row */
 export interface RawINGVRecord {
   EventID: string;
   Time: string;

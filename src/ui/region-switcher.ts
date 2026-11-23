@@ -31,7 +31,7 @@ export class RegionSwitcher {
 
     const select = document.createElement('select');
     select.id = 'region-select';
-    select.setAttribute('aria-label', 'Region auswählen');
+    select.setAttribute('aria-label', 'Select region');
 
     for (const region of regions) {
       const option = document.createElement('option');

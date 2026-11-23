@@ -3,7 +3,7 @@ import { CANARY_COASTLINE_POLYLINES } from '../canary-coastline-data';
 
 export const canaryIslands: RegionConfig = {
   id: 'canary-islands',
-  title: 'Kanarische Inseln',
+  title: 'Canary Islands',
   center: { lat: 28.1, lon: -15.4 },
   bounds: { minLat: 27.5, maxLat: 29.5, minLon: -18.5, maxLon: -13.3 },
   coastlinePolylines: CANARY_COASTLINE_POLYLINES,
