@@ -1,4 +1,4 @@
-# Architektur — CampiFlegrei 3D
+# Architektur — earthquake-3d
 
 Dieses Dokument beschreibt den technischen Aufbau der Anwendung für Entwickler:innen.
 
