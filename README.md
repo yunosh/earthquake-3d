@@ -1,4 +1,4 @@
-# CampiFlegrei 3D
+# earthquake-3d
 
 Eine 3D-Web-Visualisierung von Erdbebendaten für vulkanische und seismische Regionen. Erdbeben werden als farbige Kugeln in einem 3D-Raum dargestellt (Längengrad → X, Tiefe → Y, Breitengrad → Z) und über die Zeit animiert. Aktuell unterstützt: die Campi Flegrei bei Neapel (Italien) und die Kanarischen Inseln.
 
